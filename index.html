@@ -3,237 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Object Database</title>
-    <!-- Google <model-viewer> library for 3D files -->
+    <title>Global Object Collection</title>
+    <!-- Load Google's 3D Viewer Script -->
     <script type="module" src="https://googleapis.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #333; }
-        h1 { text-align: center; color: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         
-        /* Filter layout */
-        .filter-section { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .filter-section input, .filter-section select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; min-width: 150px; }
+        /* Filter Panel */
+        .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 15px; }
+        .filter-section input, .filter-section select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; flex: 1; min-width: 200px; }
         
-        /* Grid and overview cards */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
-        .card h3 { margin: 12px 0 6px 0; color: #2c3e50; }
-        .card p { margin: 4px 0; font-size: 0.9em; color: #666; }
-
-        /* Detail Modal (Popup Window) */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
-        .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; gap: 20px; }
-        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #aaa; }
-        .close-btn:hover { color: black; }
+        /* Grid and Card Styles */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .card-media { height: 220px; background: #eaeded; position: relative; }
+        .card-media img { width: 100%; height: 100%; object-fit: cover; }
+        .card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { margin: 0 0 10px 0; font-size: 18px; color: #2c3e50; }
+        .card-meta { font-size: 13px; color: #7f8c8d; margin-bottom: 10px; }
         
-        /* Media & Gallery area inside popup */
-        .media-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; min-height: 300px; }
-        @media (max-width: 768px) { .media-container { grid-template-columns: 1fr; } }
+        /* Modal (Popup View) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; width: 100%; max-width: 900px; max-height: 90vh; border-radius: 16px; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 30px; background: none; border: none; color: #333; cursor: pointer; z-index: 1010; }
         
-        .gallery-box { display: flex; flex-direction: column; align-items: center; position: relative; background: #eaeaea; border-radius: 6px; justify-content: center; }
-        .gallery-box img { max-width: 100%; max-height: 300px; object-fit: contain; }
-        .gallery-nav { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; }
-        .gallery-nav button { background: rgba(0,0,0,0.5); color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+        .modal-body { display: flex; flex-direction: column; }
+        @media(min-width: 768px) { .modal-body { flex-direction: row; } }
         
-        model-viewer { width: 100%; height: 300px; background-color: #eee; border-radius: 6px; }
+        .modal-media-container { flex: 1; background: #000; min-height: 350px; position: relative; display: flex; justify-content: center; align-items: center; }
+        .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; }
+        model-viewer { width: 100%; height: 450px; background-color: #1a1a1a; }
         
-        /* Meta Data Table */
-        .specs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .specs-table td { padding: 6px 10px; border-bottom: 1px solid #eee; font-size: 0.95em; }
-        .specs-table td:first-child { font-weight: bold; color: #555; width: 35%; }
+        /* Gallery Arrows */
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 1005; }
+        .nav-btn:hover { background: white; }
+        .prev-btn { left: 10px; }
+        .next-btn { right: 10px; }
+        
+        /* Specs Table */
+        .modal-info { flex: 1; padding: 30px; overflow-y: auto; }
+        .specs-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .specs-table td { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .specs-table td.td-label { font-weight: bold; color: #7f8c8d; width: 40%; }
     </style>
 </head>
 <body>
 
-    <h1>Historical Object Collection</h1>
+    <div class="container">
+        <h1>Global Object Collection</h1>
 
-    <!-- Search & Filters -->
-    <div class="filter-section">
-        <input type="text" id="searchInput" placeholder="Search by name, origin..." oninput="applyFilters()">
-        
-        <select id="categoryFilter" onchange="applyFilters()">
-            <option value="">All Categories</option>
-            <option value="Swords">Swords</option>
-            <option value="Polearms">Polearms</option>
-        </select>
+        <div class="filter-section">
+            <input type="text" id="searchInput" placeholder="Search..." oninput="filterObjects()">
+            <select id="categoryFilter" onchange="filterObjects()">
+                <option value="">All Categories</option>
+                <option value="Edged Weapons">Edged Weapons</option>
+                <option value="Armor">Armor</option>
+            </select>
+            <select id="typeFilter" onchange="filterObjects()">
+                <option value="">All Types</option>
+                <option value="Sword">Sword</option>
+                <option value="Helmet">Helmet</option>
+            </select>
+        </div>
 
-        <select id="typeFilter" onchange="applyFilters()">
-            <option value="">All Types</option>
-            <option value="Single-handed">Single-handed</option>
-            <option value="Halberd">Halberd</option>
-        </select>
-
-        <select id="dateFilter" onchange="applyFilters()">
-            <option value="">All Periods</option>
-            <option value="10th Century">10th Century</option>
-            <option value="14th Century">14th Century</option>
-        </select>
+        <div class="grid" id="objectGrid"></div>
     </div>
 
-    <!-- Main Grid View -->
-    <div class="grid" id="objectGrid"></div>
-
-    <!-- Detail View Modal -->
-    <div id="detailModal" class="modal">
+    <div class="modal" id="detailModal" onclick="closeModalOnOutsideClick(event)">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h2 id="modalName"></h2>
-            <h4 id="modalAltName" style="color: #777; margin-top: -15px;"></h4>
-            
-            <div class="media-container">
-                <!-- Image Gallery -->
-                <div class="gallery-box">
-                    <img id="modalImage" src="" alt="Object View">
-                    <div class="gallery-nav" id="galleryControls">
-                        <button onclick="changeImage(-1)">&#10094;</button>
-                        <button onclick="changeImage(1)">&#10095;</button>
-                    </div>
-                </div>
-                <!-- 3D Viewer Container -->
-                <div id="modal3DContainer"></div>
-            </div>
-
-            <p id="modalDescription" style="line-height: 1.5;"></p>
-
-            <!-- Specifications Table -->
-            <table class="specs-table">
-                <tr><td>Category / Type</td><td id="modalCatType"></td></tr>
-                <tr><td>Date / Era</td><td id="modalDate"></td></tr>
-                <tr><td>Current Location</td><td id="modalLocation"></td></tr>
-                <tr><td>Weight</td><td id="modalWeight"></td></tr>
-                <tr><td>Total Length</td><td id="modalLength"></td></tr>
-                <tr><td>Blade Dimensions</td><td id="modalBlade"></td></tr>
-                <tr><td>Point of Balance (PoB)</td><td id="modalPob"></td></tr>
-                <tr><td>Distal Taper</td><td id="modalTaper"></td></tr>
-            </table>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
 
     <script>
         let allObjects = [];
-        let currentPhotos = [];
-        let currentPhotoIndex = 0;
+        let currentMediaIndex = 0;
+        let currentMediaList = [];
 
-        // Fetch data from database file
         fetch('datenbank.json')
             .then(res => res.json())
             .then(data => {
                 allObjects = data;
                 renderGrid(allObjects);
-            });
+            }).catch(err => console.error(err));
 
-        // Display objects in overview grid
         function renderGrid(objects) {
             const grid = document.getElementById('objectGrid');
             grid.innerHTML = '';
-            
+            if(objects.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; width:100%; color:#7f8c8d;">No matching items found.</p>';
+                return;
+            }
             objects.forEach(obj => {
-                // Use the first image in array as preview cover
-                const previewImg = (obj.photo && obj.photo.length > 0) ? obj.photo[0] : 'placeholder.jpg';
-                
+                let previewPhoto = 'https://placeholder.com';
+                if (obj.photo && Array.isArray(obj.photo) && obj.photo.length > 0) previewPhoto = obj.photo[0];
+                else if (obj.photo && typeof obj.photo === 'string' && obj.photo.trim() !== '') previewPhoto = obj.photo;
+
                 grid.innerHTML += `
                     <div class="card" onclick="openModal(${obj.id})">
-                        <img src="${previewImg}" alt="${obj.name}">
-                        <h3>${obj.name}</h3>
-                        <p><strong>Category:</strong> ${obj.category}</p>
-                        <p><strong>Date:</strong> ${obj.date}</p>
-                    </div>
-                `;
+                        <div class="card-media"><img src="${previewPhoto}" alt="${obj.name || 'Object'}" loading="lazy"></div>
+                        <div class="card-content">
+                            <div>
+                                <h3 class="card-title">${obj.name || 'Unnamed'}</h3>
+                                <div class="card-meta"><strong>${obj.category || '-'}</strong> | ${obj.type || '-'}</div>
+                            </div>
+                        </div>
+                    </div>`;
             });
         }
 
-        // Combined Filter and Search Logic
-        function applyFilters() {
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            const catVal = document.getElementById('categoryFilter').value;
-            const typeVal = document.getElementById('typeFilter').value;
-            const dateVal = document.getElementById('dateFilter').value;
+        function filterObjects() {
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCategory = document.getElementById('categoryFilter').value;
+            const selectedType = document.getElementById('typeFilter').value;
 
             const filtered = allObjects.filter(obj => {
-                const matchSearch = obj.name.toLowerCase().includes(searchVal) || 
-                                    obj.altname.toLowerCase().includes(searchVal) || 
-                                    obj.description.toLowerCase().includes(searchVal);
-                const matchCat = catVal === "" || obj.category === catVal;
-                const matchType = typeVal === "" || obj.type === typeVal;
-                const matchDate = dateVal === "" || obj.date === dateVal;
-
-                return matchSearch && matchCat && matchType && matchDate;
+                const nameMatch = obj.name ? obj.name.toLowerCase().includes(searchKeyword) : false;
+                const descMatch = obj.description ? obj.description.toLowerCase().includes(searchKeyword) : false;
+                return (nameMatch || descMatch) && (selectedCategory === "" || obj.category === selectedCategory) && (selectedType === "" || obj.type === selectedType);
             });
-
             renderGrid(filtered);
         }
 
-        // Open Detailed Popup Window
         function openModal(id) {
             const obj = allObjects.find(item => item.id === id);
-            if (!obj) return;
+            if(!obj) return;
 
-            document.getElementById('modalName').innerText = obj.name;
-            document.getElementById('modalAltName').innerText = obj.altname ? `Also known as: ${obj.altname}` : '';
-            document.getElementById('modalDescription').innerText = obj.description;
+            currentMediaList = [];
+            if(obj.modell3d && obj.modell3d.trim() !== "") currentMediaList.push({ type: '3d', src: obj.modell3d });
             
-            // Meta Spec Population
-            document.getElementById('modalCatType').innerText = `${obj.category} (${obj.type})`;
-            document.getElementById('modalDate').innerText = obj.date;
-            document.getElementById('modalLocation').innerText = obj.currentlocation;
-            document.getElementById('modalWeight').innerText = obj.weight;
-            document.getElementById('modalLength').innerText = obj.length;
-            document.getElementById('modalBlade').innerText = `Length: ${obj.bladelength} | Width: ${obj.bladewidth}`;
-            document.getElementById('modalPob').innerText = obj.pob;
-            document.getElementById('modalTaper').innerText = obj.distaltaper;
+            if(obj.photo && Array.isArray(obj.photo)) {
+                obj.photo.forEach(img => { if(img.trim() !== "") currentMediaList.push({ type: 'image', src: img }); });
+            } else if(obj.photo && typeof obj.photo === 'string' && obj.photo.trim() !== "") {
+                currentMediaList.push({ type: 'image', src: obj.photo });
+            }
 
-            // Gallery logic Setup
-            currentPhotos = obj.photo || [];
-            currentPhotoIndex = 0;
-            updateGalleryImage();
+            if(currentMediaList.length === 0) currentMediaList.push({ type: 'image', src: 'https://placeholder.com' });
+            currentMediaIndex = 0;
             
-            // Hide or show arrow buttons based on image count
-            document.getElementById('galleryControls').style.display = currentPhotos.length > 1 ? 'flex' : 'none';
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="modal-media-container" id="modalMediaViewport"></div>
+                <div class="modal-info">
+                    <h2>${obj.name || 'Unnamed Object'}</h2>
+                    <p>${obj.description || 'No description available.'}</p>
+                    <table class="specs-table">
+                        <tr><td class="td-label">Category</td><td>${obj.category || '-'}</td></tr>
+                        <tr><td class="td-label">Type</td><td>${obj.type || '-'}</td></tr>
+                        <tr><td class="td-label">Date</td><td>${obj.date || '-'}</td></tr>
+                        <tr><td class="td-label">Location</td><td>${obj.currentlocation || '-'}</td></tr>
+                        <tr><td class="td-label">Weight</td><td>${obj.weight || '-'}</td></tr>
+                        <tr><td class="td-label">Length</td><td>${obj.length || '-'}</td></tr>
+                    </table>
+                </div>`;
 
-            // 3D Model Logic Setup
-        const container3D = document.getElementById('modal3DContainer');
-        container3D.innerHTML = ''; // reset previous viewer
-        
-        if (obj.modell3d) {
-            container3D.innerHTML = `<model-viewer src="${obj.modell3d}" camera-controls touch-action="pan-y" alt="3D Model Viewer" auto-rotate></model-viewer>`;
-        } else {
-            container3D.innerHTML = 'No 3D Model available';
+            updateMediaViewport();
+            document.getElementById('detailModal').classList.add('active');
         }
-        
-        document.getElementById('detailModal').style.display = 'flex';
-    }
 
-    // Gallery Browsing
-    function updateGalleryImage() {
-        const imgElement = document.getElementById('modalImage');
-        if (currentPhotos.length > 0) {
-            imgElement.src = currentPhotos[currentPhotoIndex];
-            imgElement.style.display = 'block';
-        } else {
-            imgElement.style.display = 'none';
+        function updateMediaViewport() {
+            const viewport = document.getElementById('modalMediaViewport');
+            const media = currentMediaList[currentMediaIndex];
+            let htmlContent = media.type === '3d' 
+                ? `<model-viewer src="${media.src}" camera-controls touch-action="pan-y" auto-rotate></model-viewer>` 
+                : `<img src="${media.src}" alt="Gallery">`;
+
+        if (currentMediaList.length > 1) {
+            htmlContent += `<button class="nav-btn prev-btn" onclick="changeMedia(-1, event)">&lt;</button>`;
+            htmlContent += `<button class="nav-btn next-btn" onclick="changeMedia(1, event)">&gt;</button>`;
         }
+        viewport.innerHTML = htmlContent;
     }
 
-    function changeImage(direction) {
-        currentPhotoIndex += direction;
-        if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
-        if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
-        updateGalleryImage();
+    function changeMedia(direction, event) {
+        event.stopPropagation();
+        currentMediaIndex += direction;
+        
+        if (currentMediaIndex >= currentMediaList.length) currentMediaIndex = 0;
+        if (currentMediaIndex < 0) currentMediaIndex = currentMediaList.length - 1;
+        
+        updateMediaViewport();
     }
 
-    // Close Modal Window
     function closeModal() {
-        document.getElementById('detailModal').style.display = 'none';
-        // Stop 3D audio or tracking by wiping content
-        document.getElementById('modal3DContainer').innerHTML = '';
+        document.getElementById('detailModal').classList.remove('active');
+        const vp = document.getElementById('modalMediaViewport');
+        if (vp) vp.innerHTML = '';
     }
 
-    // Close modal if clicked outside content box
-    window.onclick = function(event) {
-        const modal = document.getElementById('detailModal');
-        if (event.target == modal) {
+    function closeModalOnOutsideClick(event) {
+        if (event.target.id === 'detailModal') {
             closeModal();
         }
     }
