@@ -1,1 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Object Database</title>
+    <!-- Google <model-viewer> library for 3D files -->
+    <script type="module" src="https://googleapis.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #333; }
+        h1 { text-align: center; color: #2c3e50; }
+        
+        /* Filter layout */
+        .filter-section { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .filter-section input, .filter-section select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; flex: 1; min-width: 150px; }
+        
+        /* Grid and overview cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
+        .card h3 { margin: 12px 0 6px 0; color: #2c3e50; }
+        .card p { margin: 4px 0; font-size: 0.9em; color: #666; }
 
+        /* Detail Modal (Popup Window) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 12px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; gap: 20px; }
+        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #aaa; }
+        .close-btn:hover { color: black; }
+        
+        /* Media & Gallery area inside popup */
+        .media-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; min-height: 300px; }
+        @media (max-width: 768px) { .media-container { grid-template-columns: 1fr; } }
+        
+        .gallery-box { display: flex; flex-direction: column; align-items: center; position: relative; background: #eaeaea; border-radius: 6px; justify-content: center; }
+        .gallery-box img { max-width: 100%; max-height: 300px; object-fit: contain; }
+        .gallery-nav { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; }
+        .gallery-nav button { background: rgba(0,0,0,0.5); color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; }
+        
+        model-viewer { width: 100%; height: 300px; background-color: #eee; border-radius: 6px; }
+        
+        /* Meta Data Table */
+        .specs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .specs-table td { padding: 6px 10px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .specs-table td:first-child { font-weight: bold; color: #555; width: 35%; }
+    </style>
+</head>
+<body>
+
+    <h1>Historical Object Collection</h1>
+
+    <!-- Search & Filters -->
+    <div class="filter-section">
+        <input type="text" id="searchInput" placeholder="Search by name, origin..." oninput="applyFilters()">
+        
+        <select id="categoryFilter" onchange="applyFilters()">
+            <option value="">All Categories</option>
+            <option value="Swords">Swords</option>
+            <option value="Polearms">Polearms</option>
+        </select>
+
+        <select id="typeFilter" onchange="applyFilters()">
+            <option value="">All Types</option>
+            <option value="Single-handed">Single-handed</option>
+            <option value="Halberd">Halberd</option>
+        </select>
+
+        <select id="dateFilter" onchange="applyFilters()">
+            <option value="">All Periods</option>
+            <option value="10th Century">10th Century</option>
+            <option value="14th Century">14th Century</option>
+        </select>
+    </div>
+
+    <!-- Main Grid View -->
+    <div class="grid" id="objectGrid"></div>
+
+    <!-- Detail View Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalName"></h2>
+            <h4 id="modalAltName" style="color: #777; margin-top: -15px;"></h4>
+            
+            <div class="media-container">
+                <!-- Image Gallery -->
+                <div class="gallery-box">
+                    <img id="modalImage" src="" alt="Object View">
+                    <div class="gallery-nav" id="galleryControls">
+                        <button onclick="changeImage(-1)">&#10094;</button>
+                        <button onclick="changeImage(1)">&#10095;</button>
+                    </div>
+                </div>
+                <!-- 3D Viewer Container -->
+                <div id="modal3DContainer"></div>
+            </div>
+
+            <p id="modalDescription" style="line-height: 1.5;"></p>
+
+            <!-- Specifications Table -->
+            <table class="specs-table">
+                <tr><td>Category / Type</td><td id="modalCatType"></td></tr>
+                <tr><td>Date / Era</td><td id="modalDate"></td></tr>
+                <tr><td>Current Location</td><td id="modalLocation"></td></tr>
+                <tr><td>Weight</td><td id="modalWeight"></td></tr>
+                <tr><td>Total Length</td><td id="modalLength"></td></tr>
+                <tr><td>Blade Dimensions</td><td id="modalBlade"></td></tr>
+                <tr><td>Point of Balance (PoB)</td><td id="modalPob"></td></tr>
+                <tr><td>Distal Taper</td><td id="modalTaper"></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allObjects = [];
+        let currentPhotos = [];
+        let currentPhotoIndex = 0;
+
+        // Fetch data from database file
+        fetch('datenbank.json')
+            .then(res => res.json())
+            .then(data => {
+                allObjects = data;
+                renderGrid(allObjects);
+            });
+
+        // Display objects in overview grid
+        function renderGrid(objects) {
+            const grid = document.getElementById('objectGrid');
+            grid.innerHTML = '';
+            
+            objects.forEach(obj => {
+                // Use the first image in array as preview cover
+                const previewImg = (obj.photo && obj.photo.length > 0) ? obj.photo[0] : 'placeholder.jpg';
+                
+                grid.innerHTML += `
+                    <div class="card" onclick="openModal(${obj.id})">
+                        <img src="${previewImg}" alt="${obj.name}">
+                        <h3>${obj.name}</h3>
+                        <p><strong>Category:</strong> ${obj.category}</p>
+                        <p><strong>Date:</strong> ${obj.date}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Combined Filter and Search Logic
+        function applyFilters() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const catVal = document.getElementById('categoryFilter').value;
+            const typeVal = document.getElementById('typeFilter').value;
+            const dateVal = document.getElementById('dateFilter').value;
+
+            const filtered = allObjects.filter(obj => {
+                const matchSearch = obj.name.toLowerCase().includes(searchVal) || 
+                                    obj.altname.toLowerCase().includes(searchVal) || 
+                                    obj.description.toLowerCase().includes(searchVal);
+                const matchCat = catVal === "" || obj.category === catVal;
+                const matchType = typeVal === "" || obj.type === typeVal;
+                const matchDate = dateVal === "" || obj.date === dateVal;
+
+                return matchSearch && matchCat && matchType && matchDate;
+            });
+
+            renderGrid(filtered);
+        }
+
+        // Open Detailed Popup Window
+        function openModal(id) {
+            const obj = allObjects.find(item => item.id === id);
+            if (!obj) return;
+
+            document.getElementById('modalName').innerText = obj.name;
+            document.getElementById('modalAltName').innerText = obj.altname ? `Also known as: ${obj.altname}` : '';
+            document.getElementById('modalDescription').innerText = obj.description;
+            
+            // Meta Spec Population
+            document.getElementById('modalCatType').innerText = `${obj.category} (${obj.type})`;
+            document.getElementById('modalDate').innerText = obj.date;
+            document.getElementById('modalLocation').innerText = obj.currentlocation;
+            document.getElementById('modalWeight').innerText = obj.weight;
+            document.getElementById('modalLength').innerText = obj.length;
+            document.getElementById('modalBlade').innerText = `Length: ${obj.bladelength} | Width: ${obj.bladewidth}`;
+            document.getElementById('modalPob').innerText = obj.pob;
+            document.getElementById('modalTaper').innerText = obj.distaltaper;
+
+            // Gallery logic Setup
+            currentPhotos = obj.photo || [];
+            currentPhotoIndex = 0;
+            updateGalleryImage();
+            
+            // Hide or show arrow buttons based on image count
+            document.getElementById('galleryControls').style.display = currentPhotos.length > 1 ? 'flex' : 'none';
+
+            // 3D Model Logic Setup
+        const container3D = document.getElementById('modal3DContainer');
+        container3D.innerHTML = ''; // reset previous viewer
+        
+        if (obj.modell3d) {
+            container3D.innerHTML = `<model-viewer src="${obj.modell3d}" camera-controls touch-action="pan-y" alt="3D Model Viewer" auto-rotate></model-viewer>`;
+        } else {
+            container3D.innerHTML = 'No 3D Model available';
+        }
+        
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    // Gallery Browsing
+    function updateGalleryImage() {
+        const imgElement = document.getElementById('modalImage');
+        if (currentPhotos.length > 0) {
+            imgElement.src = currentPhotos[currentPhotoIndex];
+            imgElement.style.display = 'block';
+        } else {
+            imgElement.style.display = 'none';
+        }
+    }
+
+    function changeImage(direction) {
+        currentPhotoIndex += direction;
+        if (currentPhotoIndex >= currentPhotos.length) currentPhotoIndex = 0;
+        if (currentPhotoIndex < 0) currentPhotoIndex = currentPhotos.length - 1;
+        updateGalleryImage();
+    }
+
+    // Close Modal Window
+    function closeModal() {
+        document.getElementById('detailModal').style.display = 'none';
+        // Stop 3D audio or tracking by wiping content
+        document.getElementById('modal3DContainer').innerHTML = '';
+    }
+
+    // Close modal if clicked outside content box
+    window.onclick = function(event) {
+        const modal = document.getElementById('detailModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
