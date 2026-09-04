@@ -1,1 +1,44 @@
-
+[
+  {
+    "id": 1,
+    "name": "Viking Sword",
+    "altname": "Type H Sword",
+    "category": "Swords",
+    "type": "Single-handed",
+    "date": "10th Century",
+    "currentlocation": "National Museum",
+    "weight": "1100g",
+    "length": "92cm",
+    "bladelength": "76cm",
+    "bladewidth": "5.5cm",
+    "pob": "12cm",
+    "distaltaper": "4.5mm to 2.1mm",
+    "description": "A well-preserved early medieval sword with a classic lobed pommel.",
+    "photo": [
+      "fotos/viking_1.jpg",
+      "fotos/viking_2.jpg",
+      "fotos/viking_detail.jpg"
+    ],
+    "modell3d": "modelle/viking_sword.glb"
+  },
+  {
+    "id": 2,
+    "name": "Halberd",
+    "altname": "Sempach Type",
+    "category": "Polearms",
+    "type": "Halberd",
+    "date": "14th Century",
+    "currentlocation": "Private Collection",
+    "weight": "2100g",
+    "length": "210cm",
+    "bladelength": "35cm",
+    "bladewidth": "N/A",
+    "pob": "N/A",
+    "distaltaper": "N/A",
+    "description": "An infantry weapon combining an axe blade with a spike and a hook.",
+    "photo": [
+      "fotos/halberd_1.jpg"
+    ],
+    "modell3d": ""
+  }
+]
