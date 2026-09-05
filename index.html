@@ -18,7 +18,7 @@
 
         /* Grid and Card Styles */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex;[...]
+        .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
         .card:focus { outline: 3px solid #c7e1ff; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
 
@@ -31,9 +31,10 @@
         .card-meta { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
 
         /* Modal (Popup View) */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px[...] }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal[aria-hidden="true"] { pointer-events: none; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--card); width: 100%; max-width: 900px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative;[...] }
+        .modal-content { background: var(--card); width: 100%; max-width: 900px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 30px; background: none; border: none; color: var(--text); cursor: pointer; z-index: 1010; }
 
         .modal-body { display: flex; flex-direction: column; }
@@ -44,7 +45,7 @@
         model-viewer { width: 100%; height: 450px; background-color: #1a1a1a; }
 
         /* Gallery Arrows */
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; curso[...] }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
         .nav-btn:hover { background: white; }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
@@ -94,7 +95,7 @@
         }
 
         function createFallbackPreview(width = 300, height = 220, bg = '%23eaeded', text = 'No image') {
-            const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'><rect width='100%' height='100%' fill='${bg}'/><text x='50%' y[...]`;
+            const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'><rect width='100%' height='100%' fill='${bg}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%237f8c8d' font-size='16'>${text}</text></svg>`;
             return svgDataUri(svg);
         }
 
@@ -107,6 +108,36 @@
         document.getElementById('searchInput').addEventListener('input', filterObjects);
         document.getElementById('categoryFilter').addEventListener('change', filterObjects);
         document.getElementById('typeFilter').addEventListener('change', filterObjects);
+
+        // Event delegation will be attached once DOM is ready
+        function attachGridDelegation() {
+            const gridEl = document.getElementById('objectGrid');
+            if (!gridEl) return;
+
+            gridEl.addEventListener('click', (e) => {
+                const card = e.target.closest('.card');
+                if (!card || !gridEl.contains(card)) return;
+                const id = Number(card.getAttribute('data-id'));
+                console.debug('card click id=', id, card);
+                if (!isNaN(id)) openModal(id);
+            });
+
+            gridEl.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                const card = e.target.closest('.card');
+                if (!card || !gridEl.contains(card)) return;
+                e.preventDefault();
+                const id = Number(card.getAttribute('data-id'));
+                console.debug('card key activate id=', id, card);
+                if (!isNaN(id)) openModal(id);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attachGridDelegation);
+        } else {
+            attachGridDelegation();
+        }
 
         // Fetch data with user-facing error handling
         fetch('database.json')
@@ -139,6 +170,8 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.tabIndex = 0;
+                // ensure attribute is present and accessible via closest
+                card.setAttribute('data-id', String(obj.id));
 
                 const mediaDiv = document.createElement('div');
                 mediaDiv.className = 'card-media';
@@ -175,10 +208,6 @@
                 inner.appendChild(meta);
 
                 contentDiv.appendChild(inner);
-
-                // events
-                card.addEventListener('click', () => openModal(obj.id));
-                card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(obj.id); } });
 
                 card.appendChild(mediaDiv);
                 card.appendChild(contentDiv);
@@ -276,6 +305,9 @@
             // keyboard listeners
             document.addEventListener('keydown', modalKeyHandler);
         }
+
+        // expose for delegated handlers & console tests
+        window.openModal = openModal;
 
         function updateMediaViewport() {
             const viewport = document.getElementById('modalMediaViewport');
