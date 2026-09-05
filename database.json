@@ -1,44 +1,44 @@
 [
   {
     "id": 1,
-    "name": "Viking Sword",
-    "altname": "Type H Sword",
-    "category": "Swords",
-    "type": "Single-handed",
-    "date": "10th Century",
-    "currentlocation": "National Museum",
-    "weight": "1100g",
-    "length": "92cm",
-    "bladelength": "76cm",
-    "bladewidth": "5.5cm",
-    "pob": "12cm",
-    "distaltaper": "4.5mm to 2.1mm",
-    "description": "A well-preserved early medieval sword with a classic lobed pommel.",
-    "photo": [
-      "fotos/viking_1.jpg",
-      "fotos/viking_2.jpg",
-      "fotos/viking_detail.jpg"
-    ],
-    "modell3d": "modelle/viking_sword.glb"
+    "name": "Short Sword",
+    "altname": "Arming Sword",
+    "category": "Edged Weapons",
+    "type": "Sword",
+    "date": "14th Century",
+    "currentlocation": "Museum Collection",
+    "weight": "1050g",
+    "length": "85cm",
+    "description": "A short single-handed sword typical for late medieval infantry.",
+    "photo": [],
+    "modell3d": ""
   },
   {
     "id": 2,
-    "name": "Halberd",
-    "altname": "Sempach Type",
-    "category": "Polearms",
-    "type": "Halberd",
-    "date": "14th Century",
+    "name": "Nasal Helmet",
+    "altname": "Spangenhelm",
+    "category": "Armor",
+    "type": "Helmet",
+    "date": "11th Century",
+    "currentlocation": "Regional Museum",
+    "weight": "1200g",
+    "length": "N/A",
+    "description": "A conical helmet with nasal guard used across medieval Europe.",
+    "photo": [],
+    "modell3d": ""
+  },
+  {
+    "id": 3,
+    "name": "Chain Mail",
+    "altname": "Hauberk",
+    "category": "Armor",
+    "type": "Mail",
+    "date": "13th Century",
     "currentlocation": "Private Collection",
-    "weight": "2100g",
-    "length": "210cm",
-    "bladelength": "35cm",
-    "bladewidth": "N/A",
-    "pob": "N/A",
-    "distaltaper": "N/A",
-    "description": "An infantry weapon combining an axe blade with a spike and a hook.",
-    "photo": [
-      "fotos/halberd_1.jpg"
-    ],
+    "weight": "8000g",
+    "length": "90cm",
+    "description": "A knee-length mail shirt made of interlinked iron rings.",
+    "photo": [],
     "modell3d": ""
   }
 ]
