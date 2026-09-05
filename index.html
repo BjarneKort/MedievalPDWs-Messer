@@ -4,56 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Global Object Collection</title>
-    <!-- Korrigiertes Google <model-viewer> Skript für 3D-Modelle -->
-    <script type="module" src="https://googleapis.com"></script>
+    <!-- Official model-viewer from CDN -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f7fa; color: #333; }
+        :root { --bg: #f5f7fa; --card: #ffffff; --muted: #7f8c8d; --text: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: var(--bg); color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; }
         h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
-        
+
         /* Filter Panel */
-        .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 15px; }
+        .filter-section { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 15px; }
         .filter-section input, .filter-section select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; flex: 1; min-width: 200px; }
-        
+
         /* Grid and Card Styles */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+        .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+        .card:focus { outline: 3px solid #c7e1ff; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        
-        /* Medienbereich mit Fallback für fehlende Bilder/Modelle */
-        .card-media { height: 220px; background: #eaeded; position: relative; display: flex; align-items: center; justify-content: center; color: #7f8c8d; font-size: 14px; }
+
+        /* Media area */
+        .card-media { height: 220px; background: #eaeded; position: relative; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
         .card-media img, .card-media model-viewer { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
-        
+
         .card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    </style>
-</head>
         .card-title { margin: 0 0 10px 0; font-size: 18px; color: #2c3e50; }
-        .card-meta { font-size: 13px; color: #7f8c8d; margin-bottom: 10px; }
-        
+        .card-meta { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+
         /* Modal (Popup View) */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 900px; max-height: 90vh; border-radius: 16px; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 30px; background: none; border: none; color: #333; cursor: pointer; z-index: 1010; }
-        
+        .modal-content { background: var(--card); width: 100%; max-width: 900px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 30px; background: none; border: none; color: var(--text); cursor: pointer; z-index: 1010; }
+
         .modal-body { display: flex; flex-direction: column; }
         @media(min-width: 768px) { .modal-body { flex-direction: row; } }
-        
+
         .modal-media-container { flex: 1; background: #000; min-height: 350px; position: relative; display: flex; justify-content: center; align-items: center; color: #fff; }
         .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; }
         model-viewer { width: 100%; height: 450px; background-color: #1a1a1a; }
-        
+
         /* Gallery Arrows */
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 1005; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
         .nav-btn:hover { background: white; }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
-        
+
         /* Specs Table */
         .modal-info { flex: 1; padding: 30px; overflow-y: auto; }
         .specs-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .specs-table td { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
-        .specs-table td.td-label { font-weight: bold; color: #7f8c8d; width: 40%; }
+        .specs-table td.td-label { font-weight: bold; color: var(--muted); width: 40%; }
+
+        .sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
     </style>
 </head>
 <body>
@@ -62,78 +64,137 @@
         <h1>Global Object Collection</h1>
 
         <div class="filter-section">
-            <input type="text" id="searchInput" placeholder="Search..." oninput="filterObjects()">
-            <select id="categoryFilter" onchange="filterObjects()">
+            <input type="text" id="searchInput" placeholder="Search...">
+            <select id="categoryFilter">
                 <option value="">All Categories</option>
                 <option value="Edged Weapons">Edged Weapons</option>
                 <option value="Armor">Armor</option>
             </select>
-            <select id="typeFilter" onchange="filterObjects()">
+            <select id="typeFilter">
                 <option value="">All Types</option>
                 <option value="Sword">Sword</option>
                 <option value="Helmet">Helmet</option>
             </select>
         </div>
 
-        <div class="grid" id="objectGrid"></div>
+        <div class="grid" id="objectGrid" aria-live="polite"></div>
     </div>
 
-    <div class="modal" id="detailModal" onclick="closeModalOnOutsideClick(event)">
+    <div class="modal" id="detailModal" role="dialog" aria-modal="true" aria-hidden="true">
         <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <button class="close-btn" id="modalCloseBtn" aria-label="Close details">&times;</button>
             <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
 
     <script>
+        // Safe helpers
+        function svgDataUri(svgString) {
+            return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString);
+        }
+
+        function createFallbackPreview(width = 300, height = 220, bg = '%23eaeded', text = 'No image') {
+            const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'><rect width='100%' height='100%' fill='${bg}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%237f8c8d' font-size='16'>${text}</text></svg>`;
+            return svgDataUri(svg);
+        }
+
         let allObjects = [];
         let currentMediaIndex = 0;
         let currentMediaList = [];
+        let lastFocusedElement = null;
 
+        // Attach filter listeners
+        document.getElementById('searchInput').addEventListener('input', filterObjects);
+        document.getElementById('categoryFilter').addEventListener('change', filterObjects);
+        document.getElementById('typeFilter').addEventListener('change', filterObjects);
+
+        // Fetch data with user-facing error handling
         fetch('datenbank.json')
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load data');
+                return res.json();
+            })
             .then(data => {
+                if (!Array.isArray(data)) data = [];
                 allObjects = data;
                 renderGrid(allObjects);
-            }).catch(err => console.error(err));
+            }).catch(err => {
+                console.error(err);
+                const grid = document.getElementById('objectGrid');
+                grid.innerHTML = `<p style="text-align:center; width:100%; color:#7f8c8d;">Could not load data: ${err.message}</p>`;
+            });
 
         function renderGrid(objects) {
             const grid = document.getElementById('objectGrid');
             grid.innerHTML = '';
-            if(objects.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; width:100%; color:#7f8c8d;">No matching items found.</p>';
+            if (!objects || objects.length === 0) {
+                const p = document.createElement('p');
+                p.style.cssText = 'text-align:center; width:100%; color:#7f8c8d;';
+                p.textContent = 'No matching items found.';
+                grid.appendChild(p);
                 return;
             }
-            objects.forEach(obj => {
-                // Generiert ein sauberes SVG-Fallback-Bild, falls kein Foto existiert
-                let previewPhoto = "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='300' height='220' viewBox='0 0 300 220'><rect width='100%' height='100%' fill='%23eaeded'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%237f8c8d'>Kein Bild verfuegbar</text></svg>";
-                
-                if (obj.photo && Array.isArray(obj.photo) && obj.photo.length > 0 && obj.photo[0].trim() !== '') previewPhoto = obj.photo[0];
-                else if (obj.photo && typeof obj.photo === 'string' && obj.photo.trim() !== '') previewPhoto = obj.photo;
 
-                grid.innerHTML += `
-                    <div class="card" onclick="openModal(${obj.id})">
-                        <div class="card-media"><img src="${previewPhoto}" alt="${obj.name || 'Object'}" loading="lazy"></div>
-                        <div class="card-content">
-                            <div>
-                                <h3 class="card-title">${obj.name || 'Unnamed'}</h3>
-                                <div class="card-meta"><strong>${obj.category || '-'}</strong> | ${obj.type || '-'}</div>
-                            </div>
-                        </div>
-                    </div>`;
+            objects.forEach(obj => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.tabIndex = 0;
+
+                const mediaDiv = document.createElement('div');
+                mediaDiv.className = 'card-media';
+
+                // Determine preview photo safely
+                let previewPhoto = createFallbackPreview();
+                try {
+                    if (obj.photo && Array.isArray(obj.photo) && obj.photo.length > 0 && String(obj.photo[0]).trim() !== '') previewPhoto = obj.photo[0];
+                    else if (obj.photo && typeof obj.photo === 'string' && obj.photo.trim() !== '') previewPhoto = obj.photo;
+                } catch (e) { /* ignore malformed photo */ }
+
+                const img = document.createElement('img');
+                img.loading = 'lazy';
+                img.alt = obj.name ? String(obj.name) : 'Object';
+                img.src = previewPhoto;
+                mediaDiv.appendChild(img);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'card-content';
+
+                const title = document.createElement('h3');
+                title.className = 'card-title';
+                title.textContent = obj.name ? String(obj.name) : 'Unnamed';
+
+                const meta = document.createElement('div');
+                meta.className = 'card-meta';
+                const cat = document.createElement('strong');
+                cat.textContent = obj.category ? String(obj.category) : '-';
+                meta.appendChild(cat);
+                meta.appendChild(document.createTextNode(' | ' + (obj.type ? String(obj.type) : '-')));
+
+                const inner = document.createElement('div');
+                inner.appendChild(title);
+                inner.appendChild(meta);
+
+                contentDiv.appendChild(inner);
+
+                // events
+                card.addEventListener('click', () => openModal(obj.id));
+                card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(obj.id); } });
+
+                card.appendChild(mediaDiv);
+                card.appendChild(contentDiv);
+                grid.appendChild(card);
             });
         }
 
         function filterObjects() {
-            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            const searchKeyword = String(document.getElementById('searchInput').value || '').toLowerCase();
             const selectedCategory = document.getElementById('categoryFilter').value;
             const selectedType = document.getElementById('typeFilter').value;
 
             const filtered = allObjects.filter(obj => {
-                const nameMatch = obj.name ? obj.name.toLowerCase().includes(searchKeyword) : false;
-                const descMatch = obj.description ? obj.description.toLowerCase().includes(searchKeyword) : false;
-                
-                // Fallbacks eingebaut, falls category oder type in der JSON fehlen
+                const nameMatch = obj.name ? String(obj.name).toLowerCase().includes(searchKeyword) : false;
+                const descMatch = obj.description ? String(obj.description).toLowerCase().includes(searchKeyword) : false;
+
                 const objCategory = obj.category || "";
                 const objType = obj.type || "";
 
@@ -144,85 +205,150 @@
 
         function openModal(id) {
             const obj = allObjects.find(item => item.id === id);
-            if(!obj) return;
+            if (!obj) return;
+
+            // Save focus
+            lastFocusedElement = document.activeElement;
 
             currentMediaList = [];
-            // Sichergestellt, dass das Skript nicht abstürzt, wenn modell3d oder photo undefined sind
-            if(obj.modell3d && typeof obj.modell3d === 'string' && obj.modell3d.trim() !== "") {
+            if (obj.modell3d && typeof obj.modell3d === 'string' && obj.modell3d.trim() !== '') {
                 currentMediaList.push({ type: '3d', src: obj.modell3d });
             }
-            
-            if(obj.photo && Array.isArray(obj.photo)) {
-                obj.photo.forEach(img => { if(img && img.trim() !== "") currentMediaList.push({ type: 'image', src: img }); });
-            } else if(obj.photo && typeof obj.photo === 'string' && obj.photo.trim() !== "") {
+            if (obj.photo && Array.isArray(obj.photo)) {
+                obj.photo.forEach(img => { if (img && String(img).trim() !== '') currentMediaList.push({ type: 'image', src: String(img) }); });
+            } else if (obj.photo && typeof obj.photo === 'string' && obj.photo.trim() !== '') {
                 currentMediaList.push({ type: 'image', src: obj.photo });
             }
-            // Fallback für den Fall, dass das Objekt weder Fotos noch 3D-Modelle besitzt
-            if(currentMediaList.length === 0) {
-                currentMediaList.push({ 
-                    type: 'image', 
-                    src: "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='450' height='450' viewBox='0 0 450 450'><rect width='100%' height='100%' fill='%231a1a1a'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%237f8c8d'>Keine Medien verfuegbar</text></svg>" 
-                });
+
+            if (currentMediaList.length === 0) {
+                currentMediaList.push({ type: 'image', src: createFallbackPreview(450, 450, '%231a1a1a', 'No media available') });
             }
+
             currentMediaIndex = 0;
-            
+
             const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
-                <div class="modal-media-container" id="modalMediaViewport"></div>
-                <div class="modal-info">
-                    <h2>${obj.name || 'Unnamed Object'}</h2>
-                    <p>${obj.description || 'No description available.'}</p>
-                    <table class="specs-table">
-                        <tr><td class="td-label">Category</td><td>${obj.category || '-'}</td></tr>
-                        <tr><td class="td-label">Type</td><td>${obj.type || '-'}</td></tr>
-                        <tr><td class="td-label">Date</td><td>${obj.date || '-'}</td></tr>
-                        <tr><td class="td-label">Location</td><td>${obj.currentlocation || '-'}</td></tr>
-                        <tr><td class="td-label">Weight</td><td>${obj.weight || '-'}</td></tr>
-                        <tr><td class="td-label">Length</td><td>${obj.length || '-'}</td></tr>
-                    </table>
-                </div>`;
+            modalBody.innerHTML = '';
+
+            const mediaContainer = document.createElement('div');
+            mediaContainer.className = 'modal-media-container';
+            mediaContainer.id = 'modalMediaViewport';
+
+            const info = document.createElement('div');
+            info.className = 'modal-info';
+
+            const h2 = document.createElement('h2');
+            h2.textContent = obj.name ? String(obj.name) : 'Unnamed Object';
+            const p = document.createElement('p');
+            p.textContent = obj.description ? String(obj.description) : 'No description available.';
+
+            const table = document.createElement('table');
+            table.className = 'specs-table';
+            const specs = [
+                ['Category', obj.category || '-'],
+                ['Type', obj.type || '-'],
+                ['Date', obj.date || '-'],
+                ['Location', obj.currentlocation || '-'],
+                ['Weight', obj.weight || '-'],
+                ['Length', obj.length || '-']
+            ];
+            specs.forEach(([label, value]) => {
+                const tr = document.createElement('tr');
+                const tdLabel = document.createElement('td'); tdLabel.className = 'td-label'; tdLabel.textContent = label;
+                const tdVal = document.createElement('td'); tdVal.textContent = value;
+                tr.appendChild(tdLabel); tr.appendChild(tdVal); table.appendChild(tr);
+            });
+
+            info.appendChild(h2); info.appendChild(p); info.appendChild(table);
+
+            modalBody.appendChild(mediaContainer);
+            modalBody.appendChild(info);
 
             updateMediaViewport();
-            document.getElementById('detailModal').classList.add('active');
+
+            const modal = document.getElementById('detailModal');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+
+            // focus management
+            const closeBtn = document.getElementById('modalCloseBtn');
+            closeBtn.focus();
+
+            // keyboard listeners
+            document.addEventListener('keydown', modalKeyHandler);
         }
 
         function updateMediaViewport() {
             const viewport = document.getElementById('modalMediaViewport');
             if (!viewport) return;
-            
+            viewport.innerHTML = '';
+
             const media = currentMediaList[currentMediaIndex];
-            let htmlContent = media.type === '3d' 
-                ? `<model-viewer src="${media.src}" camera-controls touch-action="pan-y" auto-rotate></model-viewer>` 
-                : `<img src="${media.src}" alt="Gallery">`;
+            if (!media) return;
+
+            if (media.type === '3d') {
+                const mv = document.createElement('model-viewer');
+                mv.setAttribute('src', media.src);
+                mv.setAttribute('camera-controls', '');
+                mv.setAttribute('touch-action', 'pan-y');
+                mv.setAttribute('auto-rotate', '');
+                mv.style.width = '100%';
+                mv.style.height = '450px';
+                viewport.appendChild(mv);
+            } else {
+                const img = document.createElement('img');
+                img.alt = 'Gallery';
+                img.src = media.src;
+                viewport.appendChild(img);
+            }
 
             if (currentMediaList.length > 1) {
-                htmlContent += `<button class="nav-btn prev-btn" onclick="changeMedia(-1, event)">&lt;</button>`;
-                htmlContent += `<button class="nav-btn next-btn" onclick="changeMedia(1, event)">&gt;</button>`;
+                const prev = document.createElement('button');
+                prev.className = 'nav-btn prev-btn';
+                prev.type = 'button';
+                prev.innerHTML = '&lt;';
+                prev.addEventListener('click', (e) => { e.stopPropagation(); changeMedia(-1); });
+
+                const next = document.createElement('button');
+                next.className = 'nav-btn next-btn';
+                next.type = 'button';
+                next.innerHTML = '&gt;';
+                next.addEventListener('click', (e) => { e.stopPropagation(); changeMedia(1); });
+
+                viewport.appendChild(prev);
+                viewport.appendChild(next);
             }
-            viewport.innerHTML = htmlContent;
         }
 
-        function changeMedia(direction, event) {
-            if (event) event.stopPropagation();
+        function changeMedia(direction) {
             currentMediaIndex += direction;
-            
             if (currentMediaIndex >= currentMediaList.length) currentMediaIndex = 0;
             if (currentMediaIndex < 0) currentMediaIndex = currentMediaList.length - 1;
-            
             updateMediaViewport();
         }
 
         function closeModal() {
-            document.getElementById('detailModal').classList.remove('active');
+            const modal = document.getElementById('detailModal');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
             const vp = document.getElementById('modalMediaViewport');
             if (vp) vp.innerHTML = '';
+            document.removeEventListener('keydown', modalKeyHandler);
+            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
         }
 
         function closeModalOnOutsideClick(event) {
-            if (event.target.id === 'detailModal') {
-                closeModal();
-            }
+            if (event.target.id === 'detailModal') closeModal();
         }
+
+        function modalKeyHandler(e) {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === 'ArrowLeft') changeMedia(-1);
+            if (e.key === 'ArrowRight') changeMedia(1);
+        }
+
+        // wire close button and outside click
+        document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+        document.getElementById('detailModal').addEventListener('click', closeModalOnOutsideClick);
     </script>
 </body>
 </html>
