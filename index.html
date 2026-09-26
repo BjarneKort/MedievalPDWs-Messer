@@ -38,8 +38,9 @@
         .next-btn { right: 10px; }
         .modal-info { flex: 1; padding: 30px; overflow-y: auto; background: var(--card); }
         .modal-info h2 { margin-top: 0; color: #2c3e50; }
+        .modal-info h3 { margin: 24px 0 8px; color: #2c3e50; font-size: 16px; }
         .modal-info > p { margin: 10px 0 20px 0; color: var(--text); }
-        .specs-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .specs-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         .specs-table tr { border-bottom: 1px solid #eee; }
         .specs-table td { padding: 12px 0; font-size: 14px; }
         .specs-table td.td-label { font-weight: bold; color: #2c3e50; width: 35%; vertical-align: top; }
@@ -80,49 +81,66 @@
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d">${text}</text></svg>`;
             return svgDataUri(svg);
         }
-        
+
         let allObjects = [], currentMediaIndex = 0, currentMediaList = [], lastFocusedElement = null;
         const grid = document.getElementById('objectGrid');
-        
         document.getElementById('searchInput').addEventListener('input', filterObjects);
         document.getElementById('categoryFilter').addEventListener('change', filterObjects);
         document.getElementById('typeFilter').addEventListener('change', filterObjects);
-        
         grid.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) openModal(Number(card.dataset.id)); });
         grid.addEventListener('keydown', e => { const card = e.target.closest('.card'); if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(Number(card.dataset.id)); } });
-        
+
         fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { console.error(err); grid.innerHTML = `<p style="text-align:center;width:100%;color:#7f8c8d;">Could not load data: ${err.message}</p>`; });
-        
+
         function renderGrid(objects) {
             grid.innerHTML = '';
             if (!objects.length) { grid.innerHTML = '<p style="text-align:center;width:100%;color:#7f8c8d;">No matching items found.</p>'; return; }
             objects.forEach(obj => {
                 const card = document.createElement('div'); card.className = 'card'; card.tabIndex = 0; card.dataset.id = obj.id;
-                const media = document.createElement('div'); media.className = 'card-media'; const img = document.createElement('img'); img.loading = 'lazy'; img.alt = obj.name || 'Object'; img.src = Array.isArray(obj.photo) && obj.photo.length && String(obj.photo[0]).trim() ? obj.photo[0] : createFallbackPreview(); media.appendChild(img);
-                const content = document.createElement('div'); content.className = 'card-content'; content.innerHTML = `<h3 class="card-title"></h3><div class="card-meta"></div>`; content.querySelector('.card-title').textContent = obj.name || 'Unnamed'; content.querySelector('.card-meta').textContent = `${obj.category || '-'} | ${obj.type || '-'}`;
+                const media = document.createElement('div'); media.className = 'card-media';
+                const img = document.createElement('img'); img.loading = 'lazy'; img.alt = obj.name || 'Object';
+                img.src = Array.isArray(obj.photo) && obj.photo.length && String(obj.photo[0]).trim() ? obj.photo[0] : createFallbackPreview();
+                media.appendChild(img);
+                const content = document.createElement('div'); content.className = 'card-content'; content.innerHTML = '<h3 class="card-title"></h3><div class="card-meta"></div>';
+                content.querySelector('.card-title').textContent = obj.name || 'Unnamed';
+                content.querySelector('.card-meta').textContent = `${obj.category || '-'} | ${obj.type || '-'}`;
                 card.append(media, content); grid.appendChild(card);
             });
         }
-        
+
         function filterObjects() {
-            const keyword = document.getElementById('searchInput').value.toLowerCase(), category = document.getElementById('categoryFilter').value, type = document.getElementById('typeFilter').value;
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const type = document.getElementById('typeFilter').value;
             renderGrid(allObjects.filter(obj => ((String(obj.name || '').toLowerCase().includes(keyword) || String(obj.description || '').toLowerCase().includes(keyword))) && (!category || obj.category === category) && (!type || obj.type === type)));
         }
-        
+
+        function appendRows(table, fields, obj) {
+            fields.forEach(([key, label]) => {
+                const value = obj[key];
+                if (value === undefined || value === null || String(value).trim() === '') return;
+                const row = document.createElement('tr');
+                row.innerHTML = '<td class="td-label"></td><td></td>';
+                row.children[0].textContent = label;
+                row.children[1].textContent = String(value);
+                table.appendChild(row);
+            });
+        }
+
         function openModal(id) {
-            const obj = allObjects.find(item => item.id === id); if (!obj) return; lastFocusedElement = document.activeElement; currentMediaList = [];
+            const obj = allObjects.find(item => item.id === id); if (!obj) return;
+            lastFocusedElement = document.activeElement; currentMediaList = [];
             if (obj.modell3d && String(obj.modell3d).trim()) currentMediaList.push({ type: '3d', src: obj.modell3d });
             if (Array.isArray(obj.photo)) obj.photo.filter(p => p && String(p).trim()).forEach(p => currentMediaList.push({ type: 'image', src: String(p) }));
-            if (!currentMediaList.length) currentMediaList.push({ type: 'image', src: createFallbackPreview(450, 450, '#1a1a1a', 'No media available') }); 
+            if (!currentMediaList.length) currentMediaList.push({ type: 'image', src: createFallbackPreview(450, 450, '#1a1a1a', 'No media available') });
             currentMediaIndex = 0;
-            
-            const body = document.getElementById('modalBody'); 
-            body.innerHTML = '<div class="modal-media-container" id="modalMediaViewport"></div><div class="modal-info"><h2></h2><p></p><table class="specs-table"></table></div>';
-            body.querySelector('h2').textContent = obj.name || 'Unnamed Object'; 
+
+            const body = document.getElementById('modalBody');
+            body.innerHTML = '<div class="modal-media-container" id="modalMediaViewport"></div><div class="modal-info"><h2></h2><p></p><h3 class="general-heading">General Information</h3><table class="specs-table general-table"></table><h3 class="dimensions-heading">Dimensions</h3><table class="specs-table dimensions-table"></table></div>';
+            body.querySelector('h2').textContent = obj.name || 'Unnamed Object';
             body.querySelector('p').textContent = obj.description || 'No description available.';
-            
-            // Define all possible fields from database with display names
-            const fieldMapping = [
+
+            appendRows(body.querySelector('.general-table'), [
                 ['name', 'Name'],
                 ['altname', 'Alternate Name'],
                 ['category', 'Category'],
@@ -130,7 +148,10 @@
                 ['date', 'Date'],
                 ['currentlocation', 'Current Location'],
                 ['weight', 'Weight'],
-                ['pointofbalance', 'Point of Balance'],
+                ['pointofbalance', 'Point of Balance']
+            ], obj);
+
+            appendRows(body.querySelector('.dimensions-table'), [
                 ['length', 'Length'],
                 ['bladelenght', 'Blade Length'],
                 ['falseedgelength', 'False Edge Length'],
@@ -139,77 +160,30 @@
                 ['depthnailring', 'Depth Nail Ring'],
                 ['distal taper', 'Distal Taper'],
                 ['pommelcapdimensions', 'Pommel Cap Dimensions']
-            ];
-            
-            fieldMapping.forEach(([key, label]) => {
-                const value = obj[key];
-                if (value !== undefined && value !== null && String(value).trim() !== '') {
-                    const row = document.createElement('tr'); 
-                    row.innerHTML = `<td class="td-label"></td><td></td>`; 
-                    row.children[0].textContent = label; 
-                    row.children[1].textContent = String(value);
-                    body.querySelector('table').appendChild(row);
-                }
-            });
-            
-            updateMediaViewport(); 
-            const modal = document.getElementById('detailModal'); 
-            modal.classList.add('active'); 
-            modal.setAttribute('aria-hidden', 'false'); 
-            document.getElementById('modalCloseBtn').focus(); 
+            ], obj);
+
+            updateMediaViewport();
+            const modal = document.getElementById('detailModal');
+            modal.classList.add('active'); modal.setAttribute('aria-hidden', 'false');
+            document.getElementById('modalCloseBtn').focus();
             document.addEventListener('keydown', modalKeyHandler);
         }
-        
+
         window.openModal = openModal;
-        
-        function updateMediaViewport() { 
-            const viewport = document.getElementById('modalMediaViewport'); 
-            if (!viewport) return; 
-            viewport.innerHTML = ''; 
-            const media = currentMediaList[currentMediaIndex]; 
-            if (media.type === '3d') { 
-                const viewer = document.createElement('model-viewer'); 
-                viewer.src = media.src; 
-                viewer.setAttribute('camera-controls', ''); 
-                viewer.setAttribute('auto-rotate', ''); 
-                viewport.appendChild(viewer); 
-            } else { 
-                const img = document.createElement('img'); 
-                img.src = media.src; 
-                img.alt = 'Gallery'; 
-                viewport.appendChild(img); 
-            } 
-            if (currentMediaList.length > 1) { 
-                ['prev', 'next'].forEach((direction, i) => { 
-                    const btn = document.createElement('button'); 
-                    btn.className = `nav-btn ${direction}-btn`; 
-                    btn.type = 'button'; 
-                    btn.textContent = i ? '>' : '<'; 
-                    btn.onclick = () => changeMedia(i ? 1 : -1); 
-                    viewport.appendChild(btn); 
-                }); 
-            } 
+
+        function updateMediaViewport() {
+            const viewport = document.getElementById('modalMediaViewport'); if (!viewport) return;
+            viewport.innerHTML = ''; const media = currentMediaList[currentMediaIndex];
+            if (media.type === '3d') {
+                const viewer = document.createElement('model-viewer'); viewer.src = media.src;
+                viewer.setAttribute('camera-controls', ''); viewer.setAttribute('auto-rotate', ''); viewport.appendChild(viewer);
+            } else { const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; viewport.appendChild(img); }
+            if (currentMediaList.length > 1) ['prev', 'next'].forEach((direction, i) => { const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = i ? '>' : '<'; btn.onclick = () => changeMedia(i ? 1 : -1); viewport.appendChild(btn); });
         }
-        
-        function changeMedia(direction) { 
-            currentMediaIndex = (currentMediaIndex + direction + currentMediaList.length) % currentMediaList.length; 
-            updateMediaViewport(); 
-        }
-        
-        function closeModal() { 
-            const modal = document.getElementById('detailModal'); 
-            modal.classList.remove('active'); 
-            modal.setAttribute('aria-hidden', 'true'); 
-            document.removeEventListener('keydown', modalKeyHandler); 
-            if (lastFocusedElement) lastFocusedElement.focus(); 
-        }
-        
-        function modalKeyHandler(e) { 
-            if (e.key === 'Escape') closeModal(); 
-            if (e.key === 'ArrowLeft') changeMedia(-1); 
-            if (e.key === 'ArrowRight') changeMedia(1); 
-        }
-        
+
+        function changeMedia(direction) { currentMediaIndex = (currentMediaIndex + direction + currentMediaList.length) % currentMediaList.length; updateMediaViewport(); }
+        function closeModal() { const modal = document.getElementById('detailModal'); modal.classList.remove('active'); modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', modalKeyHandler); if (lastFocusedElement) lastFocusedElement.focus(); }
+        function modalKeyHandler(e) { if (e.key === 'Escape') closeModal(); if (e.key === 'ArrowLeft') changeMedia(-1); if (e.key === 'ArrowRight') changeMedia(1); }
         document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
         document.getElementById('detailModal').addEventListener('click', e => { if (e.target.id === 'detailModal') closeModal(); });
     </script>
