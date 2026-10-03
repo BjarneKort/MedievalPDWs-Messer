@@ -82,6 +82,12 @@
             return svgDataUri(svg);
         }
 
+        function getPreviewImage(photoList) {
+            if (!Array.isArray(photoList) || !photoList.length) return '';
+            const oblique = photoList.find(p => String(p).toLowerCase().includes('oblique'));
+            return oblique || photoList[0];
+        }
+
         let allObjects = [], currentMediaIndex = 0, currentMediaList = [], lastFocusedElement = null;
         const grid = document.getElementById('objectGrid');
         document.getElementById('searchInput').addEventListener('input', filterObjects);
@@ -99,7 +105,8 @@
                 const card = document.createElement('div'); card.className = 'card'; card.tabIndex = 0; card.dataset.id = obj.id;
                 const media = document.createElement('div'); media.className = 'card-media';
                 const img = document.createElement('img'); img.loading = 'lazy'; img.alt = obj.name || 'Object';
-                img.src = Array.isArray(obj.photo) && obj.photo.length && String(obj.photo[0]).trim() ? obj.photo[0] : createFallbackPreview();
+                const previewSource = getPreviewImage(Array.isArray(obj.photo) ? obj.photo : []);
+                img.src = previewSource ? previewSource : createFallbackPreview();
                 media.appendChild(img);
                 const content = document.createElement('div'); content.className = 'card-content'; content.innerHTML = '<h3 class="card-title"></h3><div class="card-meta"></div>';
                 content.querySelector('.card-title').textContent = obj.name || 'Unnamed';
