@@ -175,5 +175,28 @@
       "images/St. Annen 1934-406/5 1934-406 mark.png"
     ],
     "modell3d": ""
+  },
+  {
+    "id": 8,
+    "name": "Falko's",
+    "altname": "",
+    "category": "Langes Messer",
+    "type": "",
+    "date": "late 15th cent.(?)",
+    "currentlocation": "Private Collection, Germany",
+    "weight": "860 g",
+    "pointofbalance": "103 mm from guard",
+    "length": "712 mm",
+    "bladelenght": "582 mm",
+    "falseedgelength": "",
+    "bladewidth": "40 mm at guard; 37 mm at 1/2; 32 mm at 40 cm",
+    "guardlength": "138 mm",
+    "depthnailring": "31 mm",
+    "distal taper": "7,3 mm at guard; 4,0 mm at 1/2; 3,1 mm at 40 cm",
+    "pommelcapdimensions": "37,5 x 24 mm at base; 32,5 x 22 mm at grip scales",
+    "grip": "130 mm (Cross 18 + Grip 78 + Pommel 34)",
+    "description": "",
+    "photo": [],
+    "modell3d": ""
   }
 ]
