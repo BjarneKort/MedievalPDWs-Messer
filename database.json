@@ -196,7 +196,11 @@
     "pommelcapdimensions": "37,5 x 24 mm at base; 32,5 x 22 mm at grip scales",
     "grip": "130 mm (Cross 18 + Grip 78 + Pommel 34)",
     "description": "",
-    "photo": [],
+    "photo": [
+      "images/Falko's/1 Falko full.png",
+      "images/Falko's/2 Falko oblique.png",
+      "images/Falko's/3 Falko hilt.png"
+    ],
     "modell3d": ""
   }
 ]
