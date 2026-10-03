@@ -78,7 +78,7 @@
     <script>
         function svgDataUri(svgString) { return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString); }
         function createFallbackPreview(width = 300, height = 220, bg = '#eaeded', text = 'No image') {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d">${text}</text></svg>`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-size="16">${text}</text></svg>`;
             return svgDataUri(svg);
         }
 
@@ -90,7 +90,7 @@
         grid.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) openModal(Number(card.dataset.id)); });
         grid.addEventListener('keydown', e => { const card = e.target.closest('.card'); if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(Number(card.dataset.id)); } });
 
-        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { console.error(err); grid.innerHTML = `<p style="text-align:center;width:100%;color:#7f8c8d;">Could not load data: ${err.message}</p>`; });
+        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { console.error(err); grid.innerHTML = '<p style="text-align:center;width:100%;color:#7f8c8d;">Unable to load object data.</p>'; });
 
         function renderGrid(objects) {
             grid.innerHTML = '';
@@ -112,7 +112,12 @@
             const keyword = document.getElementById('searchInput').value.toLowerCase();
             const category = document.getElementById('categoryFilter').value;
             const type = document.getElementById('typeFilter').value;
-            renderGrid(allObjects.filter(obj => ((String(obj.name || '').toLowerCase().includes(keyword) || String(obj.description || '').toLowerCase().includes(keyword))) && (!category || obj.category === category) && (!type || obj.type === type)));
+            renderGrid(allObjects.filter(obj => {
+                const matchesKeyword = String(obj.name || '').toLowerCase().includes(keyword) || String(obj.description || '').toLowerCase().includes(keyword);
+                const matchesCategory = !category || obj.category === category;
+                const matchesType = !type || obj.type === type;
+                return matchesKeyword && matchesCategory && matchesType;
+            }));
         }
 
         function appendRows(table, fields, obj) {
@@ -136,7 +141,7 @@
             currentMediaIndex = 0;
 
             const body = document.getElementById('modalBody');
-            body.innerHTML = '<div class="modal-media-container" id="modalMediaViewport"></div><div class="modal-info"><h2></h2><p></p><h3 class="general-heading">General Information</h3><table class="specs-table general-table"></table><h3 class="dimensions-heading">Dimensions</h3><table class="specs-table dimensions-table"></table></div>';
+            body.innerHTML = '<div class="modal-media-container" id="modalMediaViewport"></div><div class="modal-info"><h2></h2><p></p><h3 class="general-heading">General Information</h3><table class="specs-table general-table"></table><h3>Dimensions</h3><table class="specs-table dimensions-table"></table></div>';
             body.querySelector('h2').textContent = obj.name || 'Unnamed Object';
             body.querySelector('p').textContent = obj.description || 'No description available.';
 
@@ -159,7 +164,8 @@
                 ['guardlength', 'Guard Length'],
                 ['depthnailring', 'Depth Nail/Ring'],
                 ['distal taper', 'Distal Taper'],
-                ['pommelcapdimensions', 'Pommel Cap']
+                ['pommelcapdimensions', 'Pommel Cap'],
+                ['grip', 'Grip']
             ], obj);
 
             updateMediaViewport();
@@ -178,7 +184,12 @@
                 const viewer = document.createElement('model-viewer'); viewer.src = media.src;
                 viewer.setAttribute('camera-controls', ''); viewer.setAttribute('auto-rotate', ''); viewport.appendChild(viewer);
             } else { const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; viewport.appendChild(img); }
-            if (currentMediaList.length > 1) ['prev', 'next'].forEach((direction, i) => { const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = i ? '>' : '<'; btn.onclick = () => changeMedia(i ? 1 : -1); viewport.appendChild(btn); });
+            if (currentMediaList.length > 1) {
+                ['prev', 'next'].forEach((direction, i) => {
+                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous image' : 'Next image'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1));
+                    viewport.appendChild(btn);
+                });
+            }
         }
 
         function changeMedia(direction) { currentMediaIndex = (currentMediaIndex + direction + currentMediaList.length) % currentMediaList.length; updateMediaViewport(); }
