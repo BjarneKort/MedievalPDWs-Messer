@@ -13,10 +13,10 @@
         .filter-section { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
         .filter-section input, .filter-section select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; }
         .weight-filter-group { display: flex; gap: 15px; align-items: flex-end; flex: 1; min-width: 300px; }
-        .weight-input-wrapper { display: flex; flex-direction: column; gap: 5px; flex: 1; }
-        .weight-input-wrapper label { font-size: 12px; font-weight: bold; color: #2c3e50; }
-        .weight-input-wrapper input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .weight-range-display { font-size: 13px; color: var(--muted); white-space: nowrap; }
+        .filter-input-wrapper { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .filter-input-wrapper label { font-size: 12px; font-weight: bold; color: #2c3e50; }
+        .filter-input-wrapper input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .range-display { font-size: 13px; color: var(--muted); white-space: nowrap; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
         .card:focus { outline: 3px solid #c7e1ff; }
@@ -37,7 +37,7 @@
         @media (min-width: 768px) { .modal-media-container { width: 40%; min-height: 400px; } }
         .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; }
         model-viewer { width: 100%; height: 400px; background-color: #1a1a1a; }
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 100; }
         .nav-btn:hover { background: white; }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
@@ -64,15 +64,26 @@
                 <option value="Grosses Messer">Grosses Messer</option>
             </select>
             <div class="weight-filter-group">
-                <div class="weight-input-wrapper">
+                <div class="filter-input-wrapper">
                     <label for="weightMin">Min Weight (g)</label>
                     <input type="number" id="weightMin" placeholder="Min" min="0" max="2000">
                 </div>
-                <div class="weight-input-wrapper">
+                <div class="filter-input-wrapper">
                     <label for="weightMax">Max Weight (g)</label>
                     <input type="number" id="weightMax" placeholder="Max" min="0" max="2000">
                 </div>
-                <div class="weight-range-display" id="weightDisplay"></div>
+                <div class="range-display" id="weightDisplay"></div>
+            </div>
+            <div class="weight-filter-group">
+                <div class="filter-input-wrapper">
+                    <label for="bladeLengthMin">Min Blade Length (cm)</label>
+                    <input type="number" id="bladeLengthMin" placeholder="Min" min="0" max="150" step="0.1">
+                </div>
+                <div class="filter-input-wrapper">
+                    <label for="bladeLengthMax">Max Blade Length (cm)</label>
+                    <input type="number" id="bladeLengthMax" placeholder="Max" min="0" max="150" step="0.1">
+                </div>
+                <div class="range-display" id="bladeLengthDisplay"></div>
             </div>
         </div>
         <div class="grid" id="objectGrid" aria-live="polite"></div>
@@ -86,7 +97,7 @@
     <script>
         function svgDataUri(svgString) { return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString); }
         function createFallbackPreview(width = 300, height = 220, bg = '#eaeded', text = 'No image') {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-size="16">${text}</text></svg>`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#999" font-size="16">${text}</text></svg>`;
             return svgDataUri(svg);
         }
 
@@ -96,9 +107,9 @@
             return oblique || photoList[0];
         }
 
-        function parseWeight(weightStr) {
-            if (!weightStr) return null;
-            const match = String(weightStr).match(/(\d+(?:[.,]\d+)?)/);
+        function parseNumericValue(str) {
+            if (!str) return null;
+            const match = String(str).match(/(\d+(?:[.,]\d+)?)/);
             return match ? parseFloat(match[1].replace(',', '.')) : null;
         }
 
@@ -109,16 +120,21 @@
         const weightMin = document.getElementById('weightMin');
         const weightMax = document.getElementById('weightMax');
         const weightDisplay = document.getElementById('weightDisplay');
+        const bladeLengthMin = document.getElementById('bladeLengthMin');
+        const bladeLengthMax = document.getElementById('bladeLengthMax');
+        const bladeLengthDisplay = document.getElementById('bladeLengthDisplay');
 
         searchInput.addEventListener('input', filterObjects);
         categoryFilter.addEventListener('change', filterObjects);
         weightMin.addEventListener('input', () => { filterObjects(); updateWeightDisplay(); });
         weightMax.addEventListener('input', () => { filterObjects(); updateWeightDisplay(); });
+        bladeLengthMin.addEventListener('input', () => { filterObjects(); updateBladeLengthDisplay(); });
+        bladeLengthMax.addEventListener('input', () => { filterObjects(); updateBladeLengthDisplay(); });
 
         grid.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) openModal(Number(card.dataset.id)); });
         grid.addEventListener('keydown', e => { const card = e.target.closest('.card'); if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(Number(card.dataset.id)); } });
 
-        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { console.error(err); grid.innerHTML = '<p style="text-align:center;width:100%;color:#7f8c8d;">Unable to load object data.</p>'; });
+        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => console.error('Error loading database:', err));
 
         function updateWeightDisplay() {
             const minVal = weightMin.value ? parseInt(weightMin.value) : '';
@@ -127,6 +143,16 @@
                 weightDisplay.textContent = `${minVal || '–'} – ${maxVal || '–'} g`;
             } else {
                 weightDisplay.textContent = '';
+            }
+        }
+
+        function updateBladeLengthDisplay() {
+            const minVal = bladeLengthMin.value ? parseFloat(bladeLengthMin.value) : '';
+            const maxVal = bladeLengthMax.value ? parseFloat(bladeLengthMax.value) : '';
+            if (minVal || maxVal) {
+                bladeLengthDisplay.textContent = `${minVal || '–'} – ${maxVal || '–'} cm`;
+            } else {
+                bladeLengthDisplay.textContent = '';
             }
         }
 
@@ -152,6 +178,8 @@
             const category = categoryFilter.value;
             const minWeight = weightMin.value ? parseInt(weightMin.value) : null;
             const maxWeight = weightMax.value ? parseInt(weightMax.value) : null;
+            const minBladeLength = bladeLengthMin.value ? parseFloat(bladeLengthMin.value) : null;
+            const maxBladeLength = bladeLengthMax.value ? parseFloat(bladeLengthMax.value) : null;
 
             renderGrid(allObjects.filter(obj => {
                 const matchesKeyword = String(obj.name || '').toLowerCase().includes(keyword) || String(obj.description || '').toLowerCase().includes(keyword);
@@ -159,7 +187,7 @@
 
                 let matchesWeight = true;
                 if (minWeight !== null || maxWeight !== null) {
-                    const weight = parseWeight(obj.weight);
+                    const weight = parseNumericValue(obj.weight);
                     if (weight !== null) {
                         if (minWeight !== null && weight < minWeight) matchesWeight = false;
                         if (maxWeight !== null && weight > maxWeight) matchesWeight = false;
@@ -168,7 +196,18 @@
                     }
                 }
 
-                return matchesKeyword && matchesCategory && matchesWeight;
+                let matchesBladeLength = true;
+                if (minBladeLength !== null || maxBladeLength !== null) {
+                    const bladeLength = parseNumericValue(obj.bladelenght);
+                    if (bladeLength !== null) {
+                        if (minBladeLength !== null && bladeLength < minBladeLength) matchesBladeLength = false;
+                        if (maxBladeLength !== null && bladeLength > maxBladeLength) matchesBladeLength = false;
+                    } else {
+                        matchesBladeLength = false;
+                    }
+                }
+
+                return matchesKeyword && matchesCategory && matchesWeight && matchesBladeLength;
             }));
         }
 
@@ -238,7 +277,7 @@
             } else { const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; viewport.appendChild(img); }
             if (currentMediaList.length > 1) {
                 ['prev', 'next'].forEach((direction, i) => {
-                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous image' : 'Next image'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1));
+                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous media' : 'Next media'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1));
                     viewport.appendChild(btn);
                 });
             }
