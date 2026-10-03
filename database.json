@@ -111,7 +111,12 @@
     "pommelcapdimensions": "missing",
     "grip": "length 150 mm; width 28 mm at crossguard, 5.5 mm at end; thickness: 5.5 mm at crossguard, 3 mm at end",
     "description": "Blade geometry: single-edged, almost straight, Panduren Point. Crossguard shape: straight, round cross-section, thickening toward the Ends. Grip geometry: grip missing; tang tapers to a Point. Damage: severe corrosion; rivet, grip and pommel missing. Decoration: remains of brass inlay on the inner blade Surface.",
-    "photo": [],
+    "photo": [
+      "images/St. Annen 'Fencing Messer'/1 fencing full.png",
+      "images/St. Annen 'Fencing Messer'/2 fencing oblique.png",
+      "images/St. Annen 'Fencing Messer'/3 fencing hilt.png",
+      "images/St. Annen 'Fencing Messer'/4 fencing point.png"
+    ],
     "modell3d": ""
   },
   {
@@ -134,7 +139,12 @@
     "pommelcapdimensions": "length 100 mm; width 29 mm at grip, widening to 38 mm; thickness 16 mm at grip, becoming flatter to 3 mm",
     "grip": "length 111 mm; width 29 mm; thickness 20 mm at guard, 16 mm at pommel",
     "description": "Blade geometry: single-edged, curved, Groot point with jelmán. Guard shape: S-shaped, round cross-section, thickening toward the Ends. Grip geometry: slightly curved, angular cross-section, riveted grip scales (not preserved). Pommel shape: curved, angular cross-section, welded to tang, flattening toward the end, three holes. Damage: point broken off, grip scales missing, corrosion. Decoration: brass inlay on the inner blade surface: Passau wolf mark.",
-    "photo": [],
+    "photo": [
+      "images/St. Annen 3519/1 3519 full.png",
+      "images/St. Annen 3519/2 3519 oblique.png",
+      "images/St. Annen 3519/3 3519 hilt.png",
+      "images/St. Annen 3519/4 3519 mark.png"
+    ],
     "modell3d": ""
   },
   {
@@ -157,7 +167,13 @@
     "pommelcapdimensions": "lenght 28 mm; width 46 mm; thickness 20 mm",
     "grip": "length 110 mm; width 35 mm; thickness 20 mm",
     "description": "Single-edged, straight, symmetrical point, ground false Edge. Asymmetrical thickened pommel, probably welded to Tang. Grip: riveted horn plates. Damage: one piece of a grip scale is missing; it was restored in 2011. Decoration: brass inlay on the inner blade surface: Passau wolf mark.",
-    "photo": [],
+    "photo": [
+      "images/St. Annen 1934-406/1 1934-406 full.png",
+      "images/St. Annen 1934-406/2 1934-406 oblique.png",
+      "images/St. Annen 1934-406/3 1934-406 hilt.png",
+      "images/St. Annen 1934-406/4 1934-406 point.png",
+      "images/St. Annen 1934-406/5 1934-406 mark.png"
+    ],
     "modell3d": ""
   }
 ]
