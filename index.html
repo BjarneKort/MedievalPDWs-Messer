@@ -48,6 +48,7 @@
         .modal-info { flex: 1; padding: 30px; overflow-y: auto; background: var(--card); }
         .modal-info h2 { margin-top: 0; color: #2c3e50; }
         .modal-info h3 { margin: 24px 0 8px; color: #2c3e50; font-size: 16px; text-decoration: underline; }
+        .contributor-credit { margin-top: 24px; font-size: 13px; color: #aaa; }
         .modal-info > p { margin: 10px 0 20px 0; color: var(--text); }
         .specs-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         .specs-table tr { border-bottom: 1px solid #eee; }
@@ -268,6 +269,13 @@
                 ['depthnailring', 'Nail/Ring Depth'],
                 ['pommelcapdimensions', 'Pommel/Cap']
             ], obj);
+
+            if (typeof obj.contributor === 'string' && obj.contributor.trim()) {
+                const credit = document.createElement('div');
+                credit.className = 'contributor-credit';
+                credit.textContent = 'Images and Data contributed by ' + obj.contributor.trim();
+                body.querySelector('.modal-info').appendChild(credit);
+            }
 
             updateMediaViewport();
             const modal = document.getElementById('detailModal');
