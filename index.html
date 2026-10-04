@@ -7,16 +7,20 @@
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         :root { --bg: #f5f7fa; --card: #ffffff; --muted: #7f8c8d; --text: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: var(--text); background-image: url('images/background.png'); background-attachment: fixed; background-size: cover; background-position: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: var(--bg); color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 { text-align: center; color: #ffffff; margin-bottom: 30px; font-size: 36px; font-weight: 700; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.5); letter-spacing: 0.5px; }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
         .filter-section { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; flex-direction: column; gap: 15px; }
         .filter-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
         .filter-section input, .filter-section select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; }
-        .filter-group { display: flex; gap: 15px; align-items: flex-end; flex: 0 1 30%; min-width: 180px; }
-        .filter-input-wrapper { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+        .filter-group { display: flex; gap: 15px; align-items: flex-end; flex: 1; min-width: 300px; }
+        .filter-input-wrapper { display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .filter-input-wrapper label { font-size: 12px; font-weight: bold; color: #2c3e50; }
-        .filter-input-wrapper input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-width: 0; }
+        .filter-input-wrapper input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .range-display { font-size: 13px; color: var(--muted); white-space: nowrap; }
+        .toggle-wrapper { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; font-size: 14px; font-weight: bold; color: #2c3e50; white-space: nowrap; }
+        .toggle-wrapper input { flex: none; min-width: 0; width: 18px; height: 18px; padding: 0; cursor: pointer; }
+        .toggle-wrapper label { cursor: pointer; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
         .card:focus { outline: 3px solid #c7e1ff; }
@@ -37,7 +41,7 @@
         @media (min-width: 768px) { .modal-media-container { width: 40%; min-height: 400px; } }
         .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; }
         model-viewer { width: 100%; height: 400px; background-color: #1a1a1a; }
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 100; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 5; }
         .nav-btn:hover { background: white; }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
@@ -75,6 +79,7 @@
                         <label for="weightMax">Max Weight (g)</label>
                         <input type="number" id="weightMax" placeholder="Max" min="0" max="2000">
                     </div>
+                    <div class="range-display" id="weightDisplay"></div>
                 </div>
                 <div class="filter-group">
                     <div class="filter-input-wrapper">
@@ -85,6 +90,11 @@
                         <label for="bladeLengthMax">Max Blade Length (cm)</label>
                         <input type="number" id="bladeLengthMax" placeholder="Max" min="0" max="150" step="0.1">
                     </div>
+                    <div class="range-display" id="bladeLengthDisplay"></div>
+                </div>
+                <div class="toggle-wrapper">
+                    <input type="checkbox" id="detailedOnly">
+                    <label for="detailedOnly">With detailed data only</label>
                 </div>
             </div>
         </div>
@@ -99,7 +109,7 @@
     <script>
         function svgDataUri(svgString) { return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString); }
         function createFallbackPreview(width = 300, height = 220, bg = '#eaeded', text = 'No image') {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#999" font-size="16">${text}</text></svg>`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-size="18" font-family="Segoe UI, sans-serif">${text}</text></svg>`;
             return svgDataUri(svg);
         }
 
@@ -115,26 +125,58 @@
             return match ? parseFloat(match[1].replace(',', '.')) : null;
         }
 
+        const DIMENSION_KEYS = ['length', 'bladelenght', 'falseedgelength', 'bladewidth', 'distal taper', 'grip', 'guardlength', 'depthnailring', 'pommelcapdimensions'];
+        function countDimensionValues(obj) {
+            return DIMENSION_KEYS.filter(key => {
+                const value = obj[key];
+                return value !== undefined && value !== null && String(value).trim() !== '';
+            }).length;
+        }
+
         let allObjects = [], currentMediaIndex = 0, currentMediaList = [], lastFocusedElement = null;
         const grid = document.getElementById('objectGrid');
         const searchInput = document.getElementById('searchInput');
         const categoryFilter = document.getElementById('categoryFilter');
         const weightMin = document.getElementById('weightMin');
         const weightMax = document.getElementById('weightMax');
+        const weightDisplay = document.getElementById('weightDisplay');
         const bladeLengthMin = document.getElementById('bladeLengthMin');
         const bladeLengthMax = document.getElementById('bladeLengthMax');
+        const bladeLengthDisplay = document.getElementById('bladeLengthDisplay');
+        const detailedOnly = document.getElementById('detailedOnly');
 
         searchInput.addEventListener('input', filterObjects);
         categoryFilter.addEventListener('change', filterObjects);
-        weightMin.addEventListener('input', filterObjects);
-        weightMax.addEventListener('input', filterObjects);
-        bladeLengthMin.addEventListener('input', filterObjects);
-        bladeLengthMax.addEventListener('input', filterObjects);
+        weightMin.addEventListener('input', () => { filterObjects(); updateWeightDisplay(); });
+        weightMax.addEventListener('input', () => { filterObjects(); updateWeightDisplay(); });
+        bladeLengthMin.addEventListener('input', () => { filterObjects(); updateBladeLengthDisplay(); });
+        bladeLengthMax.addEventListener('input', () => { filterObjects(); updateBladeLengthDisplay(); });
+        detailedOnly.addEventListener('change', filterObjects);
 
         grid.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) openModal(Number(card.dataset.id)); });
         grid.addEventListener('keydown', e => { const card = e.target.closest('.card'); if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(Number(card.dataset.id)); } });
 
-        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => console.error('Error loading database:', err));
+        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { console.error(err); grid.innerHTML = '<p style="text-align:center;width:100%;color:#7f8c8d;">Failed to load data.</p>'; });
+
+        function updateWeightDisplay() {
+            const minVal = weightMin.value ? parseInt(weightMin.value) : '';
+            const maxVal = weightMax.value ? parseInt(weightMax.value) : '';
+            if (minVal || maxVal) {
+                weightDisplay.textContent = `${minVal || '–'} – ${maxVal || '–'} g`;
+            } else {
+                weightDisplay.textContent = '';
+            }
+        }
+
+        function updateBladeLengthDisplay() {
+            const minVal = bladeLengthMin.value ? parseFloat(bladeLengthMin.value) : '';
+            const maxVal = bladeLengthMax.value ? parseFloat(bladeLengthMax.value) : '';
+            if (minVal || maxVal) {
+                bladeLengthDisplay.textContent = `${minVal || '–'} – ${maxVal || '–'} cm`;
+            } else {
+                bladeLengthDisplay.textContent = '';
+            }
+        }
 
         function renderGrid(objects) {
             grid.innerHTML = '';
@@ -187,7 +229,9 @@
                     }
                 }
 
-                return matchesKeyword && matchesCategory && matchesWeight && matchesBladeLength;
+                const matchesDetailed = !detailedOnly.checked || countDimensionValues(obj) >= 3;
+
+                return matchesKeyword && matchesCategory && matchesWeight && matchesBladeLength && matchesDetailed;
             }));
         }
 
@@ -229,7 +273,7 @@
 
             appendRows(body.querySelector('.dimensions-table'), [
                 ['length', 'Length'],
-                ['bladelength', 'Blade Length'],
+                ['bladelenght', 'Blade Length'],
                 ['falseedgelength', 'False Edge'],
                 ['bladewidth', 'Blade Width'],
                 ['distal taper', 'Distal Taper'],
@@ -257,8 +301,7 @@
             } else { const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; viewport.appendChild(img); }
             if (currentMediaList.length > 1) {
                 ['prev', 'next'].forEach((direction, i) => {
-                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous media' : 'Next media'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1));
-                    viewport.appendChild(btn);
+                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', `${direction} media`); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1)); viewport.appendChild(btn);
                 });
             }
         }
