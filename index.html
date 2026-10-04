@@ -122,7 +122,7 @@
             return match ? parseFloat(match[1].replace(',', '.')) : null;
         }
 
-        const DIMENSION_KEYS = ['length', 'bladelenght', 'falseedgelength', 'bladewidth', 'distal taper', 'grip', 'guardlength', 'depthnailring', 'pommelcapdimensions'];
+        const DIMENSION_KEYS = ['length', 'bladelength', 'falseedgelength', 'bladewidth', 'distal taper', 'grip', 'guardlength', 'depthnailring', 'pommelcapdimensions'];
         function countDimensionValues(obj) {
             return DIMENSION_KEYS.filter(key => {
                 const value = obj[key];
@@ -195,7 +195,7 @@
 
                 let matchesBladeLength = true;
                 if (minBladeLength !== null || maxBladeLength !== null) {
-                    const bladeLength = parseNumericValue(obj.bladelenght);
+                    const bladeLength = parseNumericValue(obj.bladelength);
                     if (bladeLength !== null) {
                         if (minBladeLength !== null && bladeLength < minBladeLength) matchesBladeLength = false;
                         if (maxBladeLength !== null && bladeLength > maxBladeLength) matchesBladeLength = false;
