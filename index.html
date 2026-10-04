@@ -20,6 +20,7 @@
         .toggle-wrapper { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; font-size: 14px; font-weight: bold; color: #2c3e50; white-space: nowrap; }
         .toggle-wrapper input { flex: none; min-width: 0; width: 18px; height: 18px; padding: 0; cursor: pointer; }
         .toggle-wrapper label { cursor: pointer; }
+        .object-counter { font-size: 13px; color: var(--muted); border-top: 1px solid #eee; padding-top: 12px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
         .card:focus { outline: 3px solid #c7e1ff; }
@@ -94,6 +95,7 @@
                 <input type="checkbox" id="detailedOnly">
                 <label for="detailedOnly">With detailed data only</label>
             </div>
+            <div class="object-counter" id="objectCounter" aria-live="polite"></div>
         </div>
         <div class="grid" id="objectGrid" aria-live="polite"></div>
     </div>
@@ -132,6 +134,7 @@
 
         let allObjects = [], currentMediaIndex = 0, currentMediaList = [], lastFocusedElement = null;
         const grid = document.getElementById('objectGrid');
+        const objectCounter = document.getElementById('objectCounter');
         const searchInput = document.getElementById('searchInput');
         const categoryFilter = document.getElementById('categoryFilter');
         const weightMin = document.getElementById('weightMin');
@@ -153,8 +156,16 @@
 
         fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => console.error('Error loading database:', err));
 
+        function updateCounter(shown) {
+            const total = allObjects.length;
+            objectCounter.textContent = shown === total
+                ? `${total} object${total === 1 ? '' : 's'}`
+                : `Showing ${shown} of ${total} objects`;
+        }
+
         function renderGrid(objects) {
             grid.innerHTML = '';
+            updateCounter(objects.length);
             if (!objects.length) { grid.innerHTML = '<p style="text-align:center;width:100%;color:#7f8c8d;">No matching items found.</p>'; return; }
             objects.forEach(obj => {
                 const card = document.createElement('div'); card.className = 'card'; card.tabIndex = 0; card.dataset.id = obj.id;
