@@ -6,35 +6,36 @@
     <title>MesserBase</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        :root { --bg: #f5f7fa; --card: #ffffff; --muted: #7f8c8d; --text: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: var(--text); background-image: url('images/background.png'); background-attachment: fixed; background-size: cover; background-position: center; }
+        :root { --bg: #111318; --card: #2a2f36; --muted: #c4c9d1; --text: #f5f7fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: var(--text); background: #0f1115; }
         .container { max-width: 1200px; margin: 0 auto; }
         h1 { text-align: center; color: #ffffff; margin-bottom: 10px; font-size: 36px; font-weight: 700; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.5); letter-spacing: 0.5px; }
         .subtitle { text-align: center; color: #ffffff; margin-top: 0; margin-bottom: 30px; font-size: 18px; font-weight: 400; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.5); }
-        .filter-section { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; flex-direction: column; gap: 15px; }
+        .filter-section { background: #1a1f27; padding: 20px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.28); margin-bottom: 30px; display: flex; flex-direction: column; gap: 15px; }
         .filter-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
-        .filter-section input, .filter-section select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; }
+        .filter-section input, .filter-section select { padding: 10px 15px; border: 1px solid #3a414d; border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; background: #11151b; color: #fff; }
+        .filter-section input::placeholder { color: #9aa3af; }
         .filter-group { display: flex; gap: 15px; align-items: flex-end; flex: 0 1 30%; min-width: 180px; }
         .filter-input-wrapper { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
-        .filter-input-wrapper label { font-size: 12px; font-weight: bold; color: #2c3e50; }
-        .filter-input-wrapper input { padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-width: 0; }
-        .toggle-wrapper { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; font-size: 14px; font-weight: bold; color: #2c3e50; white-space: nowrap; }
+        .filter-input-wrapper label { font-size: 12px; font-weight: bold; color: #e6e9ee; }
+        .filter-input-wrapper input { padding: 8px 10px; border: 1px solid #3a414d; border-radius: 6px; font-size: 14px; min-width: 0; background: #11151b; color: #fff; }
+        .toggle-wrapper { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; font-size: 14px; font-weight: bold; color: #e6e9ee; white-space: nowrap; }
         .toggle-wrapper input { flex: none; min-width: 0; width: 18px; height: 18px; padding: 0; cursor: pointer; }
         .toggle-wrapper label { cursor: pointer; }
-        .object-counter { font-size: 13px; color: var(--muted); border-top: 1px solid #eee; padding-top: 12px; }
+        .object-counter { font-size: 13px; color: var(--muted); border-top: 1px solid #2e3640; padding-top: 12px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
-        .card:focus { outline: 3px solid #c7e1ff; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        .card-media { height: 220px; background: #eaeded; position: relative; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
+        .card { background: var(--card); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.22); overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; border: 1px solid #3a414d; }
+        .card:focus { outline: 3px solid #7aa7ff; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.28); }
+        .card-media { height: 220px; background: #1b2027; position: relative; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
         .card-media img, .card-media model-viewer { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
         .card-content { padding: 20px; flex-grow: 1; }
-        .card-title { margin: 0 0 10px 0; font-size: 18px; color: #2c3e50; }
-        .card-meta { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+        .card-title { margin: 0 0 10px 0; font-size: 18px; color: #ffffff; }
+        .card-meta { font-size: 13px; color: #c4c9d1; margin-bottom: 10px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal[aria-hidden="true"] { pointer-events: none; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--card); width: 100%; max-width: 1000px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        .modal-content { background: var(--card); width: 100%; max-width: 1000px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; border: 1px solid #3a414d; }
         .close-btn { position: absolute; top: 15px; right: 20px; font-size: 30px; background: none; border: none; color: var(--text); cursor: pointer; z-index: 1010; }
         .modal-body { display: flex; flex-direction: column; overflow-y: auto; }
         @media (min-width: 768px) { .modal-body { flex-direction: row; } }
@@ -46,15 +47,15 @@
         .nav-btn:hover { background: white; }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
-        .modal-info { flex: 1; padding: 30px; overflow-y: auto; background: var(--card); }
-        .modal-info h2 { margin-top: 0; color: #2c3e50; }
-        .modal-info h3 { margin: 24px 0 8px; color: #2c3e50; font-size: 16px; text-decoration: underline; }
-        .contributor-credit { margin-top: 24px; font-size: 13px; color: #aaa; }
+        .modal-info { flex: 1; padding: 30px; overflow-y: auto; background: var(--card); color: var(--text); }
+        .modal-info h2 { margin-top: 0; color: #ffffff; }
+        .modal-info h3 { margin: 24px 0 8px; color: #ffffff; font-size: 16px; text-decoration: underline; }
+        .contributor-credit { margin-top: 24px; font-size: 13px; color: #b4bcc7; }
         .modal-info > p { margin: 10px 0 20px 0; color: var(--text); }
         .specs-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        .specs-table tr { border-bottom: 1px solid #eee; }
-        .specs-table td { padding: 12px 0; font-size: 14px; }
-        .specs-table td.td-label { font-weight: bold; color: #2c3e50; width: 35%; vertical-align: top; }
+        .specs-table tr { border-bottom: 1px solid #313844; }
+        .specs-table td { padding: 12px 0; font-size: 14px; color: #f5f7fa; }
+        .specs-table td.td-label { font-weight: bold; color: #ffffff; width: 35%; vertical-align: top; }
         .specs-table td:last-child { word-break: break-word; }
         .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; cursor: zoom-out; }
         .lightbox.active { display: flex; }
@@ -118,8 +119,8 @@
     </div>
     <script>
         function svgDataUri(svgString) { return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString); }
-        function createFallbackPreview(width = 300, height = 220, bg = '#eaeded', text = 'No image') {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-family="Segoe UI, Arial, sans-serif" font-size="16">${text}</text></svg>`;
+        function createFallbackPreview(width = 300, height = 220, bg = '#1b2027', text = 'No image') {
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#c4c9d1" font-family="Segoe UI, Arial, sans-serif" font-size="16">${text}</text></svg>`;
             return svgDataUri(svg);
         }
 
@@ -167,7 +168,7 @@
         grid.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) openModal(Number(card.dataset.id)); });
         grid.addEventListener('keydown', e => { const card = e.target.closest('.card'); if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(Number(card.dataset.id)); } });
 
-        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { grid.innerHTML = `<p style="color:#b71c1c;text-align:center;width:100%;">${err.message}</p>`; updateCounter(0); });
+        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { grid.innerHTML = `<p style="color:#ffb3b3;text-align:center;width:100%;">${err.message}</p>`; updateCounter(0); });
 
         function updateCounter(shown) {
             const total = allObjects.length;
@@ -179,7 +180,7 @@
         function renderGrid(objects) {
             grid.innerHTML = '';
             updateCounter(objects.length);
-            if (!objects.length) { grid.innerHTML = '<p style="text-align:center;width:100%;color:#7f8c8d;">No matching items found.</p>'; return; }
+            if (!objects.length) { grid.innerHTML = '<p style="text-align:center;width:100%;color:#c4c9d1;">No matching items found.</p>'; return; }
             objects.forEach(obj => {
                 const card = document.createElement('div'); card.className = 'card'; card.tabIndex = 0; card.dataset.id = obj.id;
                 const media = document.createElement('div'); media.className = 'card-media';
