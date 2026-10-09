@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medieval PDWs - Messer</title>
+    <title>MesserBase</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
         :root { --bg: #f5f7fa; --card: #ffffff; --muted: #7f8c8d; --text: #333; }
@@ -30,7 +30,7 @@
         .card-content { padding: 20px; flex-grow: 1; }
         .card-title { margin: 0 0 10px 0; font-size: 18px; color: #2c3e50; }
         .card-meta { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .modal[aria-hidden="true"] { pointer-events: none; }
         .modal.active { display: flex; }
         .modal-content { background: var(--card); width: 100%; max-width: 1000px; max-height: 90vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
@@ -41,7 +41,7 @@
         @media (min-width: 768px) { .modal-media-container { width: 40%; min-height: 400px; } }
         .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; }
         model-viewer { width: 100%; height: 400px; background-color: #1a1a1a; }
-        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 100; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
         .nav-btn:hover { background: white; }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
@@ -59,7 +59,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Medieval PDWs - Messer</h1>
+        <h1>MesserBase</h1>
         <div class="filter-section">
             <div class="filter-row">
                 <input type="text" id="searchInput" placeholder="Search...">
@@ -109,7 +109,7 @@
     <script>
         function svgDataUri(svgString) { return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString); }
         function createFallbackPreview(width = 300, height = 220, bg = '#eaeded', text = 'No image') {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#999" font-size="16">${text}</text></svg>`;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-family="Segoe UI, Arial, sans-serif" font-size="16">${text}</text></svg>`;
             return svgDataUri(svg);
         }
 
@@ -155,7 +155,7 @@
         grid.addEventListener('click', e => { const card = e.target.closest('.card'); if (card) openModal(Number(card.dataset.id)); });
         grid.addEventListener('keydown', e => { const card = e.target.closest('.card'); if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModal(Number(card.dataset.id)); } });
 
-        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => console.error('Error loading database:', err));
+        fetch('database.json').then(res => { if (!res.ok) throw new Error('Failed to load data'); return res.json(); }).then(data => { allObjects = Array.isArray(data) ? data : []; renderGrid(allObjects); }).catch(err => { grid.innerHTML = `<p style="color:#b71c1c;text-align:center;width:100%;">${err.message}</p>`; updateCounter(0); });
 
         function updateCounter(shown) {
             const total = allObjects.length;
@@ -243,7 +243,7 @@
             currentMediaIndex = 0;
 
             const body = document.getElementById('modalBody');
-            body.innerHTML = '<div class="modal-media-container" id="modalMediaViewport"></div><div class="modal-info"><h2></h2><p></p><h3 class="general-heading">General Information</h3><table class="specs-table general-table"></table><h3>Dimensions</h3><table class="specs-table dimensions-table"></table></div>';
+            body.innerHTML = '<div class="modal-media-container" id="modalMediaViewport"></div><div class="modal-info"><h2></h2><p></p><h3 class="general-heading">General Information</h3><table class="specs-table general-table"></table><h3 class="dimensions-heading">Dimensions</h3><table class="specs-table dimensions-table"></table></div>';
             body.querySelector('h2').textContent = obj.name || 'Unnamed Object';
             body.querySelector('p').textContent = obj.description || 'No description available.';
 
@@ -295,14 +295,13 @@
             } else { const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; viewport.appendChild(img); }
             if (currentMediaList.length > 1) {
                 ['prev', 'next'].forEach((direction, i) => {
-                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous media' : 'Next media'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1));
-                    viewport.appendChild(btn);
+                    const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous media' : 'Next media'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1)); viewport.appendChild(btn);
                 });
             }
         }
 
         function changeMedia(direction) { currentMediaIndex = (currentMediaIndex + direction + currentMediaList.length) % currentMediaList.length; updateMediaViewport(); }
-        function closeModal() { const modal = document.getElementById('detailModal'); modal.classList.remove('active'); modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', modalKeyHandler); if (lastFocusedElement) lastFocusedElement.focus(); }
+        function closeModal() { const modal = document.getElementById('detailModal'); modal.classList.remove('active'); modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', modalKeyHandler); if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus(); }
         function modalKeyHandler(e) { if (e.key === 'Escape') closeModal(); if (e.key === 'ArrowLeft') changeMedia(-1); if (e.key === 'ArrowRight') changeMedia(1); }
         document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
         document.getElementById('detailModal').addEventListener('click', e => { if (e.target.id === 'detailModal') closeModal(); });
