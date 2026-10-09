@@ -97,7 +97,7 @@
   },
   {
     "id": 5,
-    "name": "St. Annen 'Fencing Messer'",
+    "name": "St. Annen 'Tapering Tang Messer'",
     "altname": "",
     "category": "Langes Messer",
     "type": "",
@@ -185,12 +185,12 @@
   },
   {
     "id": 8,
-    "name": "Falko's",
+    "name": "Priv. Coll. F. Fritz",
     "altname": "",
     "category": "Langes Messer",
     "type": "",
     "date": "late 15th cent.(?)",
-    "currentlocation": "Private Collection, Germany",
+    "currentlocation": "Private Collection, Hamburg",
     "weight": "860 g",
     "pointofbalance": "103 mm from guard",
     "length": "71.2 cm",
