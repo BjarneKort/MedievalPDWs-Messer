@@ -40,7 +40,7 @@
         @media (min-width: 768px) { .modal-body { flex-direction: row; } }
         .modal-media-container { flex: 0 0 auto; background: #000; min-height: 350px; width: 100%; position: relative; display: flex; justify-content: center; align-items: center; color: #fff; }
         @media (min-width: 768px) { .modal-media-container { width: 40%; min-height: 400px; } }
-        .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; }
+        .modal-media-container img { max-width: 100%; max-height: 450px; object-fit: contain; cursor: zoom-in; }
         model-viewer { width: 100%; height: 400px; background-color: #1a1a1a; }
         .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.7); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; }
         .nav-btn:hover { background: white; }
@@ -56,6 +56,10 @@
         .specs-table td { padding: 12px 0; font-size: 14px; }
         .specs-table td.td-label { font-weight: bold; color: #2c3e50; width: 35%; vertical-align: top; }
         .specs-table td:last-child { word-break: break-word; }
+        .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; cursor: zoom-out; }
+        .lightbox.active { display: flex; }
+        .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .lightbox-close { position: absolute; top: 15px; right: 25px; font-size: 40px; line-height: 1; background: none; border: none; color: #fff; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -108,6 +112,10 @@
             <div class="modal-body" id="modalBody"></div>
         </div>
     </div>
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Close full-screen image">&times;</button>
+        <img id="lightboxImg" alt="">
+    </div>
     <script>
         function svgDataUri(svgString) { return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgString); }
         function createFallbackPreview(width = 300, height = 220, bg = '#eaeded', text = 'No image') {
@@ -145,6 +153,8 @@
         const bladeLengthMin = document.getElementById('bladeLengthMin');
         const bladeLengthMax = document.getElementById('bladeLengthMax');
         const detailedOnly = document.getElementById('detailedOnly');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
 
         searchInput.addEventListener('input', filterObjects);
         categoryFilter.addEventListener('change', filterObjects);
@@ -288,13 +298,30 @@
 
         window.openModal = openModal;
 
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.classList.add('active');
+            lightbox.setAttribute('aria-hidden', 'false');
+            document.getElementById('lightboxClose').focus();
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            lightbox.setAttribute('aria-hidden', 'true');
+            lightboxImg.src = '';
+        }
+
         function updateMediaViewport() {
             const viewport = document.getElementById('modalMediaViewport'); if (!viewport) return;
             viewport.innerHTML = ''; const media = currentMediaList[currentMediaIndex];
             if (media.type === '3d') {
                 const viewer = document.createElement('model-viewer'); viewer.src = media.src;
                 viewer.setAttribute('camera-controls', ''); viewer.setAttribute('auto-rotate', ''); viewport.appendChild(viewer);
-            } else { const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; viewport.appendChild(img); }
+            } else {
+                const img = document.createElement('img'); img.src = media.src; img.alt = 'Gallery'; img.title = 'Click to view full screen';
+                img.addEventListener('click', () => openLightbox(media.src));
+                viewport.appendChild(img);
+            }
             if (currentMediaList.length > 1) {
                 ['prev', 'next'].forEach((direction) => {
                     const btn = document.createElement('button'); btn.className = `nav-btn ${direction}-btn`; btn.type = 'button'; btn.textContent = direction === 'prev' ? '←' : '→'; btn.setAttribute('aria-label', direction === 'prev' ? 'Previous media' : 'Next media'); btn.addEventListener('click', () => changeMedia(direction === 'prev' ? -1 : 1)); viewport.appendChild(btn);
@@ -304,9 +331,13 @@
 
         function changeMedia(direction) { currentMediaIndex = (currentMediaIndex + direction + currentMediaList.length) % currentMediaList.length; updateMediaViewport(); }
         function closeModal() { const modal = document.getElementById('detailModal'); modal.classList.remove('active'); modal.setAttribute('aria-hidden', 'true'); document.removeEventListener('keydown', modalKeyHandler); if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus(); }
-        function modalKeyHandler(e) { if (e.key === 'Escape') closeModal(); if (e.key === 'ArrowLeft') changeMedia(-1); if (e.key === 'ArrowRight') changeMedia(1); }
+        function modalKeyHandler(e) {
+            if (lightbox.classList.contains('active')) { if (e.key === 'Escape') closeLightbox(); return; }
+            if (e.key === 'Escape') closeModal(); if (e.key === 'ArrowLeft') changeMedia(-1); if (e.key === 'ArrowRight') changeMedia(1);
+        }
         document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
         document.getElementById('detailModal').addEventListener('click', e => { if (e.target.id === 'detailModal') closeModal(); });
+        lightbox.addEventListener('click', closeLightbox);
     </script>
 </body>
 </html>
